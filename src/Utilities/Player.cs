@@ -14,9 +14,10 @@ namespace AimBot.Utilities
         public static float Y => Entity?.GetComponent<Render>()?.Y ?? 0;
         public static int Level => Entity?.GetComponent<ExileCore.PoEMemory.Components.Player>()?.Level ?? 0;
         public static Life Health => Entity?.GetComponent<Life>();
-        public static AreaInstance Area;
+        public static WorldArea Area;
         public static uint AreaHash;
 
-        public static bool HasBuff(string buffName) => Entity?.GetComponent<Life>()?.HasBuff(buffName) ?? false;
+        // Note: HasBuff functionality needs to be implemented in the main plugin
+        // as the Life component doesn't have a direct HasBuff method in ExileCore
     }
 }

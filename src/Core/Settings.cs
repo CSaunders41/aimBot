@@ -13,10 +13,10 @@ namespace Aimbot.Core
         [Menu("Aim Key")] public HotkeyNode AimKey { get; set; } = Keys.A;
         [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);
         [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);
-        [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = false;
-        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = true;
-        [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = false;
-        [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = false;
+        [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = new ToggleNode(false);
+        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(true);
+        [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
+        [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
         
         [Menu("Unique Rarity Weight")] public RangeNode<int> UniqueRarityWeight { get; set; } = new RangeNode<int>(20, -200, 200);
         [Menu("Rare Rarity Weight")] public RangeNode<int> RareRarityWeight { get; set; } = new RangeNode<int>(15, -200, 200);

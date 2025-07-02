@@ -163,10 +163,10 @@ namespace Aimbot.Core
 
         public override void EntityRemoved(Entity entity) { _entities.Remove(entity); }
 
-        public override void AreaChange(WorldArea area)
+        public override void AreaChange(AreaInstance area)
         {
             // Update static Player utility references on area change
-            AimBot.Utilities.Player.Area = area;
+            AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
             AimBot.Utilities.Player.AreaHash = GameController.Game.IngameState.Data.CurrentAreaHash;
         }
 

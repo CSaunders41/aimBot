@@ -1,5 +1,1 @@
-Build failed:
-[7/2/2025 3:59:57 PM, C:\Program Files (x86)\Grinding Gear
-Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(166, 30)] CS0115:
-'Main.AreaChange(WorldArea)': no suitable method found to override
 

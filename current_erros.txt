@@ -1,0 +1,12 @@
+Build failed:
+[7/2/2025 3:37:43 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Utilities\Player.cs(16, 23)] CS0246:
+The type or namespace name 'AreaInstance' could not be found (are you missing a using directive or an assembly
+reference?)
+[7/2/2025 3:37:43 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(481, 41)] CS0246: The
+type or namespace name 'Component' could not be found (are you missing a using directive or an assembly
+reference?)
+[7/2/2025 3:37:43 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(165, 30)] CS0115:
+'Main.DrawSettingsMenu()': no suitable method found to override

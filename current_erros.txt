@@ -1,1 +1,16 @@
-
+Build failed:
+[7/2/2025 4:03:03 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Utilities\ImGuiExtension.cs(172, 51)]
+CS1620: Argument 2 must be passed with the 'ref' keyword
+[7/2/2025 4:03:03 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(217, 53)] CS1503:
+Argument 1: cannot convert from 'int' to 'ExileCore.Shared.Enums.GameStat'
+[7/2/2025 4:03:03 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(217, 102)] CS1503:
+Argument 1: cannot convert from 'int' to 'ExileCore.Shared.Enums.GameStat'
+[7/2/2025 4:03:03 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(225, 53)] CS1503:
+Argument 1: cannot convert from 'int' to 'ExileCore.Shared.Enums.GameStat'
+[7/2/2025 4:03:03 PM, C:\Program Files (x86)\Grinding Gear
+Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(225, 102)] CS1503:
+Argument 1: cannot convert from 'int' to 'ExileCore.Shared.Enums.GameStat'

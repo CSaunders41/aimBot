@@ -403,7 +403,8 @@ namespace Aimbot.Core
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (m.HasComponent<SoundParameterBreach>()) weight += Settings.BreachMonsterWeight.Value;
+            // Check for Breach monsters using path instead of custom component
+            if (m.Path.Contains("Breach") || m.Path.Contains("breach")) weight += Settings.BreachMonsterWeight.Value;
             if (m.HasComponent<DiesAfterTime>()) weight += Settings.DiesAfterTime.Value;
             if (SummonedSkeleton.Any(path => m.Path == path)) weight += Settings.SummonedSkeoton.Value;
             if (RaisedZombie.Any(path => m.Path == path)) weight += Settings.RaisedZombie.Value;
@@ -411,9 +412,5 @@ namespace Aimbot.Core
             if (m.Path.Contains("TaniwhaTail")) weight += Settings.TaniwhaTail.Value;
             return weight;
         }
-    }
-
-    public class SoundParameterBreach : ExileCore.PoEMemory.Components.Component
-    {
     }
 }

@@ -1,4 +1,5 @@
-﻿using ExileCore.PoEMemory.Components;
+﻿using ExileCore;
+using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
 
 namespace AimBot.Utilities

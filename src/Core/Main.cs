@@ -78,7 +78,7 @@ namespace Aimbot.Core
             
             // Initialize static Player utility references
             AimBot.Utilities.Player.Entity = GameController.Player;
-            AimBot.Utilities.Player.Area = GameController.Area.CurrentArea;
+            AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
             AimBot.Utilities.Player.AreaHash = GameController.Game.IngameState.Data.CurrentAreaHash;
             
             return base.Initialise();
@@ -135,92 +135,27 @@ namespace Aimbot.Core
 
         public void DrawEllipseToWorld(Vector3 vector3Pos, int radius, int points, int lineWidth, Color color)
         {
-            Camera camera = GameController.Game.IngameState.Camera;
-            List<Vector3> plottedCirclePoints = new List<Vector3>();
-            double slice = 2 * Math.PI / points;
-            for (int i = 0; i < points; i++)
+            var plottedCirclePoints = new List<Vector3>();
+            for (var i = 0; i <= 360; i += 360 / points)
             {
-                double angle = slice * i;
-                decimal x = (decimal) vector3Pos.X + decimal.Multiply(radius, (decimal) Math.Cos(angle));
-                decimal y = (decimal) vector3Pos.Y + decimal.Multiply(radius, (decimal) Math.Sin(angle));
-                plottedCirclePoints.Add(new Vector3((float) x, (float) y, vector3Pos.Z));
+                var angle = i * (Math.PI / 180f);
+                var x = (float)(vector3Pos.X + radius * Math.Cos(angle));
+                var y = (float)(vector3Pos.Y + radius * Math.Sin(angle));
+                plottedCirclePoints.Add(new Vector3(x, y, vector3Pos.Z));
             }
 
-            for (int i = 0; i < plottedCirclePoints.Count; i++)
+            for (var i = 0; i < plottedCirclePoints.Count; i++)
             {
                 if (i >= plottedCirclePoints.Count - 1)
                 {
-                    Vector2 pointEnd1 = camera.WorldToScreen(plottedCirclePoints.Last());
-                    Vector2 pointEnd2 = camera.WorldToScreen(plottedCirclePoints[0]);
-                    Graphics.DrawLine(pointEnd1, pointEnd2, lineWidth, color);
-                    return;
+                    continue;
                 }
 
+                var camera = GameController.Game.IngameState.Camera;
                 Vector2 point1 = camera.WorldToScreen(plottedCirclePoints[i]);
                 Vector2 point2 = camera.WorldToScreen(plottedCirclePoints[i + 1]);
                 Graphics.DrawLine(point1, point2, lineWidth, color);
             }
-        }
-
-        public override void DrawSettingsMenu()
-        {
-            ImGui.BulletText($"v{PluginVersion}");
-            ImGui.BulletText($"Last Updated: {buildDate}");
-            Settings.ShowAimRange.Value = ImGuiExtension.Checkbox("Display Aim Range", Settings.ShowAimRange.Value);
-            Settings.AimRange.Value = ImGuiExtension.IntDrag("Target Distance", "%.00f units", Settings.AimRange);
-            Settings.AimLoopDelay.Value = ImGuiExtension.IntDrag("Target Delay", "%.00f ms", Settings.AimLoopDelay);
-            Settings.DebugMonsterWeight.Value = ImGuiExtension.Checkbox("Draw Weight Results On Monsters", Settings.DebugMonsterWeight.Value);
-            Settings.RMousePos.Value =
-                    ImGuiExtension.Checkbox("Restore Mouse Position After Letting Go Of Auto Aim Hotkey", Settings.RMousePos.Value);
-            Settings.AimKey.Value = ImGuiExtension.HotkeySelector("Auto Aim Hotkey", "Auto Aim Popup", Settings.AimKey.Value);
-            Settings.AimPlayers.Value = ImGuiExtension.Checkbox("Aim Players Instead?", Settings.AimPlayers.Value);
-            ImGui.Separator();
-            ImGui.BulletText("Weight Settings");
-            ToolTip("Aims monsters with higher weight first");
-            Settings.UniqueRarityWeight.Value = ImGuiExtension.IntDrag("Unique Monster", Settings.UniqueRarityWeight.Value > 0 ? "+%.00f" : "%.00f",
-                    Settings.UniqueRarityWeight);
-            Settings.RareRarityWeight.Value = ImGuiExtension.IntDrag("Rare Monster", Settings.RareRarityWeight.Value > 0 ? "+%.00f" : "%.00f",
-                    Settings.RareRarityWeight);
-            Settings.MagicRarityWeight.Value = ImGuiExtension.IntDrag("Magic Monster", Settings.MagicRarityWeight.Value > 0 ? "+%.00f" : "%.00f",
-                    Settings.MagicRarityWeight);
-            Settings.NormalRarityWeight.Value = ImGuiExtension.IntDrag("Normal Monster", Settings.NormalRarityWeight.Value > 0 ? "+%.00f" : "%.00f",
-                    Settings.NormalRarityWeight);
-            Settings.CannotDieAura.Value =
-                    ImGuiExtension.IntDrag("Cannot Die Aura", Settings.CannotDieAura.Value > 0 ? "+%.00f" : "%.00f", Settings.CannotDieAura);
-            ToolTip("Monster that holds the Cannot Die Arua");
-            Settings.capture_monster_trapped.Value = ImGuiExtension.IntDrag("Monster In Net",
-                    Settings.capture_monster_trapped.Value > 0 ? "+%.00f" : "%.00f", Settings.capture_monster_trapped);
-            ToolTip("Monster is currently in a net");
-            Settings.capture_monster_enraged.Value = ImGuiExtension.IntDrag("Monster Broken Free From Net",
-                    Settings.capture_monster_enraged.Value > 0 ? "+%.00f" : "%.00f", Settings.capture_monster_enraged);
-            ToolTip("Monster has recently broken free from the net");
-            Settings.BeastHearts.Value =
-                    ImGuiExtension.IntDrag("Malachai Hearts", Settings.BeastHearts.Value > 0 ? "+%.00f" : "%.00f", Settings.BeastHearts);
-            Settings.TukohamaShieldTotem.Value = ImGuiExtension.IntDrag("Tukohama Shield Totem",
-                    Settings.TukohamaShieldTotem.Value > 0 ? "+%.00f" : "%.00f", Settings.TukohamaShieldTotem);
-            ToolTip("Usually seen in the Tukahama Boss (Act 6)");
-            Settings.StrongBoxMonster.Value = ImGuiExtension.IntDrag("Strongbox Monster (Experimental)",
-                    Settings.StrongBoxMonster.Value > 0 ? "+%.00f" : "%.00f", Settings.StrongBoxMonster);
-            Settings.BreachMonsterWeight.Value = ImGuiExtension.IntDrag("Breach Monster (Experimental)",
-                    Settings.BreachMonsterWeight.Value > 0 ? "+%.00f" : "%.00f", Settings.BreachMonsterWeight);
-            Settings.HarbingerMinionWeight.Value = ImGuiExtension.IntDrag("Harbinger Monster (Experimental)",
-                    Settings.HarbingerMinionWeight.Value > 0 ? "+%.00f" : "%.00f", Settings.HarbingerMinionWeight);
-            Settings.SummonedSkeoton.Value = ImGuiExtension.IntDrag("Summoned Skeleton", Settings.SummonedSkeoton.Value > 0 ? "+%.00f" : "%.00f",
-                    Settings.SummonedSkeoton);
-            Settings.RaisesUndead.Value =
-                    ImGuiExtension.IntDrag("Raises Undead", Settings.RaisesUndead.Value > 0 ? "+%.00f" : "%.00f", Settings.RaisesUndead);
-            Settings.RaisedZombie.Value =
-                    ImGuiExtension.IntDrag("Raised Zombie", Settings.RaisedZombie.Value > 0 ? "+%.00f" : "%.00f", Settings.RaisedZombie);
-            Settings.LightlessGrub.Value =
-                    ImGuiExtension.IntDrag("Lightless Grub", Settings.LightlessGrub.Value > 0 ? "+%.00f" : "%.00f", Settings.LightlessGrub);
-            ToolTip("Usually seen in the Abyss, they are the little insects");
-            Settings.TaniwhaTail.Value =
-                    ImGuiExtension.IntDrag("Taniwha Tail", Settings.TaniwhaTail.Value > 0 ? "+%.00f" : "%.00f", Settings.TaniwhaTail);
-            ToolTip("Usually seen in the Kaom Stronghold Areas");
-            Settings.DiesAfterTime.Value =
-                    ImGuiExtension.IntDrag("Dies After Time", Settings.DiesAfterTime.Value > 0 ? "+%.00f" : "%.00f", Settings.DiesAfterTime);
-            ToolTip("If the Monster dies soon, Usually this is a totem that was summoned");
-            base.DrawSettingsMenu();
         }
 
         public override void EntityAdded(Entity entity) { _entities.Add(entity); }
@@ -478,7 +413,7 @@ namespace Aimbot.Core
         }
     }
 
-    public class SoundParameterBreach : Component
+    public class SoundParameterBreach : ExileCore.PoEMemory.Components.Component
     {
     }
 }

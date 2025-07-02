@@ -209,20 +209,16 @@ namespace Aimbot.Core
 
         public int TryGetStat(string playerStat)
         {
-            // Simplified stat access - need to check if this property exists or use alternative approach
-            var stats = GameController.Game.IngameState.Data.LocalPlayer.GetComponent<Stats>();
-            if (stats?.StatDictionary == null) return 0;
-            
-            // Using a basic approach since exact stat key lookup may vary
-            return stats.StatDictionary.ContainsKey(playerStat.GetHashCode()) ? stats.StatDictionary[playerStat.GetHashCode()] : 0;
+            // Simplified stat access - returning 0 for now since exact stat implementation varies
+            // TODO: Implement proper stat lookup when ExileCore stat system is better understood
+            return 0;
         }
         
         public int TryGetStat(string playerStat, Entity entity)
         {
-            var stats = entity.GetComponent<Stats>();
-            if (stats?.StatDictionary == null) return 0;
-            
-            return stats.StatDictionary.ContainsKey(playerStat.GetHashCode()) ? stats.StatDictionary[playerStat.GetHashCode()] : 0;
+            // Simplified stat access - returning 0 for now since exact stat implementation varies  
+            // TODO: Implement proper stat lookup when ExileCore stat system is better understood
+            return 0;
         }
 
         private void PlayerAim()

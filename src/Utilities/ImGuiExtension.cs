@@ -169,7 +169,8 @@ namespace AimBot.Utilities
         public static Keys HotkeySelector(string buttonName, string popupTitle, Keys currentKey)
         {
             if (ImGui.Button($"{buttonName}: {currentKey} ")) ImGui.OpenPopup(popupTitle);
-            if (ImGui.BeginPopupModal(popupTitle, ImGuiWindowFlags.AlwaysAutoResize))
+            bool isOpen = true;
+            if (ImGui.BeginPopupModal(popupTitle, ref isOpen, ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.Text($"Press a key to set as {buttonName}");
                 ImGui.Text("Note: Key detection simplified for ExileCore compatibility");

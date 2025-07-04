@@ -8,13 +8,13 @@ namespace Aimbot.Core
 {
     public class Settings : ISettings
     {
-        public ToggleNode Enable { get; set; } = new ToggleNode(false);
+        public ToggleNode Enable { get; set; } = new ToggleNode(true);
         
         [Menu("Aim Key")] public HotkeyNode AimKey { get; set; } = Keys.A;
         [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);
         [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);
         [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = new ToggleNode(false);
-        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(true);
+        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(false);
         [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
         [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
         
@@ -30,7 +30,7 @@ namespace Aimbot.Core
         [Menu("Tukohama Shield Totem Weight")] public RangeNode<int> TukohamaShieldTotem { get; set; } = new RangeNode<int>(70, -200, 200);
         [Menu("Strongbox Monster Weight")] public RangeNode<int> StrongBoxMonster { get; set; } = new RangeNode<int>(25, -200, 200);
         [Menu("Raises Undead Weight")] public RangeNode<int> RaisesUndead { get; set; } = new RangeNode<int>(30, -200, 200);
-        [Menu("Summoned Skeleton Weight")] public RangeNode<int> SummonedSkeoton { get; set; } = new RangeNode<int>(-30, -200, 200);
+        [Menu("Summoned Skeleton Weight")] public RangeNode<int> SummonedSkeleton { get; set; } = new RangeNode<int>(-30, -200, 200);
         [Menu("Raised Zombie Weight")] public RangeNode<int> RaisedZombie { get; set; } = new RangeNode<int>(-30, -200, 200);
         [Menu("Lightless Grub Weight")] public RangeNode<int> LightlessGrub { get; set; } = new RangeNode<int>(-30, -200, 200);
         [Menu("Taniwha Tail Weight")] public RangeNode<int> TaniwhaTail { get; set; } = new RangeNode<int>(-40, -200, 200);

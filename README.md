@@ -2,6 +2,53 @@
 
 A modernized auto-aim plugin for Path of Exile, migrated from the legacy PoeHUD API to ExileCore.
 
+## 🚀 How to Use
+
+### Quick Start
+1. **Install** the plugin by copying `AimBot.dll` to your ExileCore plugins folder
+2. **Restart** ExileCore/ExileAPI
+3. **Enable** the plugin in ExileCore settings (F12 menu)
+4. **Configure** hotkey and settings (default: 'A' key)
+5. **Hold the aim key** while in-game to auto-target monsters
+
+### Basic Operation
+- **Aim Key**: Hold 'A' (default) to activate auto-aim - your mouse will automatically move to the nearest priority target
+- **Range Display**: Enable "Show Aim Range" to see a green circle around your character indicating targeting range
+- **Target Priority**: The plugin automatically prioritizes targets based on monster rarity and type weights
+- **Visual Feedback**: Enable "Debug Monster Weight" to see weight values above monsters
+
+### Settings Overview
+Access plugin settings via **F12 → Aim Bot**:
+
+#### Core Settings
+- **Aim Key**: Hotkey to activate targeting (default: A)
+- **Aim Range**: Maximum targeting distance (default: 600 units)
+- **Aim Loop Delay**: Delay between aim adjustments (default: 124ms)
+- **Show Aim Range**: Display green targeting circle
+- **Aim Players Instead**: Target other players instead of monsters
+- **Restore Mouse Position**: Return mouse to original position after aiming
+
+#### Monster Priority Weights
+The plugin uses a weight system to prioritize targets:
+- **Unique monsters**: +20 weight (highest priority)
+- **Rare monsters**: +15 weight
+- **Magic monsters**: +10 weight  
+- **Normal monsters**: +5 weight (lowest priority)
+- **Special monsters**: Various weights for beast hearts, totems, etc.
+- **Summoned creatures**: Negative weights (lower priority)
+
+### Tips for Best Results
+- **Windowed Mode**: Use Path of Exile in windowed or windowed fullscreen mode
+- **Positioning**: The plugin targets within your specified range, so position yourself appropriately
+- **Settings Tuning**: Adjust monster weights based on your playstyle preferences
+- **Debugging**: Enable debug options if targeting isn't working as expected
+
+### Troubleshooting
+- **Not targeting**: Check that monsters are within your aim range
+- **Wrong targets**: Adjust monster weight settings
+- **Performance**: Increase aim loop delay if experiencing lag
+- **Debug info**: Enable "Debug Monster Weight" to see what the plugin is detecting
+
 ## 🔄 Migration Status
 
 ✅ **COMPLETED** - Full migration from PoeHUD to ExileCore API

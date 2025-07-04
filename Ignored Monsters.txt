@@ -1,3 +1,9 @@
+# Ignored Monsters Configuration
+# Add monster paths here to ignore them during targeting
+# Lines starting with # are comments
+# Example:
+# Metadata/Monsters/SomeAnnoying/Monster
+
 Metadata/Monsters/Avatar/Avatar
 
 # Nightwane Clone

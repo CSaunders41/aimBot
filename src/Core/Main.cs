@@ -393,6 +393,9 @@ namespace Aimbot.Core
                 }
                 // Use human-like movement instead of instant teleportation
                 Mouse.SetCursorPosition(entityPosToScreen + _clickWindowOffset);
+                
+                // Perform auto-click if enabled
+                PerformAutoClick();
             }
             else
             {
@@ -577,6 +580,9 @@ namespace Aimbot.Core
                 {
                     LogMessage("Mouse movement executed", 1);
                 }
+                
+                // Perform auto-click if enabled
+                PerformAutoClick();
             }
             else
             {
@@ -655,6 +661,45 @@ namespace Aimbot.Core
             if (LightlessGrub.Any(path => m.Path == path)) weight += Settings.LightlessGrub.Value;
             if (m.Path.Contains("TaniwhaTail")) weight += Settings.TaniwhaTail.Value;
             return weight;
+        }
+
+        private void PerformAutoClick()
+        {
+            if (!Settings.AutoClick.Value) return;
+            
+            try
+            {
+                // Add a small delay before clicking
+                System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);
+                
+                switch (Settings.AutoClickButton.Value)
+                {
+                    case "Left Click":
+                        Mouse.LeftMouseDown();
+                        System.Threading.Thread.Sleep(10); // Brief hold
+                        Mouse.LeftMouseUp();
+                        break;
+                    case "Right Click":
+                        Mouse.RightMouseDown();
+                        System.Threading.Thread.Sleep(10); // Brief hold
+                        Mouse.RightMouseUp();
+                        break;
+                    case "Middle Click":
+                        Mouse.MiddleMouseDown();
+                        System.Threading.Thread.Sleep(10); // Brief hold
+                        Mouse.MiddleMouseUp();
+                        break;
+                }
+                
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Auto-clicked: {Settings.AutoClickButton.Value}", 1);
+                }
+            }
+            catch (Exception e)
+            {
+                LogError($"Auto-click failed: {e.Message}", 3);
+            }
         }
     }
 }

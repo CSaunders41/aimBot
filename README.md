@@ -18,6 +18,7 @@ A modernized auto-aim plugin for Path of Exile, migrated from the legacy PoeHUD 
 - **Visual Feedback**: Enable "Debug Monster Weight" to see weight values above monsters
 - **Invulnerability Handling**: Plugin automatically skips monsters that are invulnerable (grayed out health bars)
 - **Smart Logging**: Essential messages are always shown, detailed debug info only when enabled
+- **Auto-Click**: Optionally enable automatic clicking when targets are acquired (configurable button)
 
 ### Settings Overview
 Access plugin settings via **F12 → Aim Bot**:
@@ -31,6 +32,9 @@ Access plugin settings via **F12 → Aim Bot**:
 - **Restore Mouse Position**: Return mouse to original position after aiming
 - **Debug Monster Weight**: Show weight values above monsters
 - **Detailed Debug Logging**: Enable verbose technical logging for troubleshooting
+- **Auto Click**: Automatically click when targeting (default: disabled)
+- **Auto Click Button**: Which mouse button to press (Left Click, Right Click, Middle Click)
+- **Auto Click Delay**: Delay before clicking after mouse movement (default: 50ms)
 
 #### Monster Priority Weights
 The plugin uses a weight system to prioritize targets:
@@ -54,6 +58,7 @@ The plugin uses a weight system to prioritize targets:
 - **Debug info**: Enable "Debug Monster Weight" to see what the plugin is detecting
 - **Invulnerable monsters**: Plugin automatically skips monsters that cannot take damage
 - **Too much logging**: Keep "Detailed Debug Logging" disabled for normal use
+- **Auto-click issues**: Verify settings and check if correct mouse button is selected
 
 ## 🔄 Migration Status
 
@@ -73,6 +78,7 @@ The plugin uses a weight system to prioritize targets:
 - **Configurable targeting weights** for different monster types
 - **Invulnerability detection** - automatically skips monsters that cannot take damage
 - **Flexible debug logging** - essential messages always shown, detailed logs optional
+- **Auto-click functionality** - automatically clicks when targeting (optional)
 
 ## 🔧 Setup Instructions
 

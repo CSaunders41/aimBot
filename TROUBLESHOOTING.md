@@ -38,6 +38,14 @@
 - Detailed technical information is only shown when enabled
 - Periodic status checks are hidden unless debugging is enabled
 
+### 7. Auto-Click Functionality (NEW)
+**Problem**: Users had to manually click after the plugin aimed at targets.
+**Fix**: Added optional auto-click functionality:
+- Automatically clicks when a target is acquired
+- Configurable mouse button (Left, Right, or Middle Click)
+- Adjustable click delay for fine-tuning
+- Can be completely disabled for aim-only mode
+
 ## Testing Steps
 
 ### Step 1: Enable Debug Mode
@@ -71,6 +79,13 @@
    - "Hotkey pressed! AimPlayers: False" (always shown)
    - Detailed movement info (only with detailed logging enabled)
 
+### Step 6: Test Auto-Click (Optional)
+1. Enable "Auto Click" in plugin settings
+2. Choose desired "Auto Click Button" (Left Click recommended for attacks)
+3. Adjust "Auto Click Delay" if needed (50ms default works well)
+4. Hold 'A' key near monsters and verify automatic clicking occurs
+5. Watch for "Auto-clicked: [Button]" messages in detailed logging
+
 ## Common Issues and Solutions
 
 ### Issue: Key not detected
@@ -99,6 +114,18 @@
 - Technical details are hidden by default
 - Status checks no longer flash constantly
 
+### Issue: Auto-click not working
+**Check**: Is "Auto Click" enabled in plugin settings?
+**Check**: Is the correct mouse button selected for your attacks?
+**Check**: Try increasing "Auto Click Delay" if clicks seem to miss
+**Check**: Verify the game accepts the selected mouse button for your skills
+
+### Issue: Auto-click too fast/slow
+**Solution**: Adjust "Auto Click Delay" setting:
+- Increase delay if clicks are happening too quickly after aim
+- Decrease delay if there's too much pause between aim and click
+- Default 50ms works well for most setups
+
 ## Debug Log Examples
 
 ### Normal Operation (Default Logging):
@@ -115,6 +142,7 @@ MonsterAim: Sorted 8 targets by weight
 Targeting monster with weight: 25.0, distance: 234.5
 Final mouse position: 640.0, 360.0
 Mouse movement executed
+Auto-clicked: Left Click
 ```
 
 ### When invulnerable monsters are detected:
@@ -140,6 +168,11 @@ MonsterAim: Found 5 valid entities before distance check
 - Keep "Detailed Debug Logging" disabled for normal use
 - Only enable when troubleshooting specific issues
 
+### If auto-click not working as expected:
+- Verify "Auto Click" is enabled
+- Check "Auto Click Button" matches your attack setup
+- Adjust "Auto Click Delay" for timing issues
+
 ### If mouse movement is too fast/slow:
 - Adjust "Aim Loop Delay" setting
 - The mouse movement is human-like with smooth transitions
@@ -151,7 +184,10 @@ MonsterAim: Found 5 valid entities before distance check
 - Aim Loop Delay: 124ms
 - Detailed Debug Logging: False (minimal output)
 - Debug Monster Weight: False (no weight display)
+- Auto Click: False (disabled by default)
+- Auto Click Button: Left Click
+- Auto Click Delay: 50ms
 - Unique monsters: +20 weight (highest priority)
 - Rare monsters: +15 weight
 - Magic monsters: +10 weight
-- Normal monsters: +5 weight 
+- Normal monsters: +5 weight

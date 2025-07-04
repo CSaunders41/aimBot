@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using ExileCore.Shared.Attributes;
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
@@ -18,6 +19,9 @@ namespace Aimbot.Core
         [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
         [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
         [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
+        [Menu("Auto Click")] public ToggleNode AutoClick { get; set; } = new ToggleNode(false);
+        [Menu("Auto Click Button")] public ListNode AutoClickButton { get; set; } = new ListNode { Values = new List<string> { "Left Click", "Right Click", "Middle Click" }, Value = "Left Click" };
+        [Menu("Auto Click Delay")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(50, 10, 500);
         
         [Menu("Unique Rarity Weight")] public RangeNode<int> UniqueRarityWeight { get; set; } = new RangeNode<int>(20, -200, 200);
         [Menu("Rare Rarity Weight")] public RangeNode<int> RareRarityWeight { get; set; } = new RangeNode<int>(15, -200, 200);

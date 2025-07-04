@@ -72,6 +72,10 @@ namespace AimBot.Utilities
 
         public static void RightMouseUp() { mouse_event(MouseeventfRightup, 0, 0, 0, 0); }
 
+        public static void MiddleMouseDown() { mouse_event(MouseeventfMiddown, 0, 0, 0, 0); }
+
+        public static void MiddleMouseUp() { mouse_event(MouseeventfMidup, 0, 0, 0, 0); }
+
         public static void SetCursorPosAndLeftClick(Vector2 coords, int extraDelay)
         {
             var posX = (int) coords.X;

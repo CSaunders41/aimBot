@@ -16,6 +16,8 @@ A modernized auto-aim plugin for Path of Exile, migrated from the legacy PoeHUD 
 - **Range Display**: Enable "Show Aim Range" to see a green circle around your character indicating targeting range
 - **Target Priority**: The plugin automatically prioritizes targets based on monster rarity and type weights
 - **Visual Feedback**: Enable "Debug Monster Weight" to see weight values above monsters
+- **Invulnerability Handling**: Plugin automatically skips monsters that are invulnerable (grayed out health bars)
+- **Smart Logging**: Essential messages are always shown, detailed debug info only when enabled
 
 ### Settings Overview
 Access plugin settings via **F12 → Aim Bot**:
@@ -27,6 +29,8 @@ Access plugin settings via **F12 → Aim Bot**:
 - **Show Aim Range**: Display green targeting circle
 - **Aim Players Instead**: Target other players instead of monsters
 - **Restore Mouse Position**: Return mouse to original position after aiming
+- **Debug Monster Weight**: Show weight values above monsters
+- **Detailed Debug Logging**: Enable verbose technical logging for troubleshooting
 
 #### Monster Priority Weights
 The plugin uses a weight system to prioritize targets:
@@ -48,6 +52,8 @@ The plugin uses a weight system to prioritize targets:
 - **Wrong targets**: Adjust monster weight settings
 - **Performance**: Increase aim loop delay if experiencing lag
 - **Debug info**: Enable "Debug Monster Weight" to see what the plugin is detecting
+- **Invulnerable monsters**: Plugin automatically skips monsters that cannot take damage
+- **Too much logging**: Keep "Detailed Debug Logging" disabled for normal use
 
 ## 🔄 Migration Status
 
@@ -65,6 +71,8 @@ The plugin uses a weight system to prioritize targets:
 - **Player vs Monster** aim modes
 - **Visual debugging** for monster weights
 - **Configurable targeting weights** for different monster types
+- **Invulnerability detection** - automatically skips monsters that cannot take damage
+- **Flexible debug logging** - essential messages always shown, detailed logs optional
 
 ## 🔧 Setup Instructions
 

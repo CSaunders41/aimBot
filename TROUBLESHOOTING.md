@@ -22,19 +22,35 @@
 **Problem**: Mouse movement might not be working correctly.
 **Fix**: Added detailed logging of mouse position calculations and movement execution.
 
+### 5. Invulnerability Detection (NEW)
+**Problem**: Plugin would target monsters that were invulnerable (grayed out health bars).
+**Fix**: Added comprehensive invulnerability detection that checks for:
+- Missing or invalid Life component
+- Zero or negative health
+- Invulnerability stats (cannot_be_damaged, cannot_die, immune_to_damage)
+- Invulnerability buffs (invulnerable, immune, phase_run, etc.)
+- Boss transition phases
+
+### 6. Debug Logging Control (NEW)
+**Problem**: Debug information was too verbose and displayed constantly.
+**Fix**: Added "Detailed Debug Logging" setting to control verbose output:
+- Essential messages (like "Hotkey pressed!") are always shown
+- Detailed technical information is only shown when enabled
+- Periodic status checks are hidden unless debugging is enabled
+
 ## Testing Steps
 
 ### Step 1: Enable Debug Mode
 1. Open ExileCore settings (F12)
 2. Go to "Aim Bot" plugin settings
-3. Enable "Debug Monster Weight"
-4. You should see entity counts displayed on screen
+3. Enable "Debug Monster Weight" to see entity counts on screen
+4. **Optionally** enable "Detailed Debug Logging" for verbose technical information
 
 ### Step 2: Check Key Detection
 1. Hold the 'A' key while in game
 2. Watch the ExileCore log for messages like:
-   - "Key detection: AimKey (A) pressed, starting aim sequence"
-   - "Hotkey pressed! AimPlayers: False, Timer: XXXms"
+   - "Hotkey pressed! AimPlayers: False" (always shown)
+   - "Key detection: AimKey (A) pressed, starting aim sequence" (only with detailed logging)
 
 ### Step 3: Verify Entity Detection
 1. Stand near monsters
@@ -44,13 +60,16 @@
    - Monster count on screen
    - Weight numbers above monsters
 
-### Step 4: Test Mouse Movement
+### Step 4: Test Invulnerability Detection
+1. Find monsters that become invulnerable (grayed out health bars)
+2. The plugin should now skip these monsters and target others
+3. Look for monsters during boss transitions or with immunity effects
+
+### Step 5: Test Mouse Movement
 1. Hold 'A' key near monsters
 2. Watch the log for messages like:
-   - "MonsterAim: Found X entities within range"
-   - "Targeting monster with weight: X.X, distance: X.X"
-   - "Final mouse position: X.X, X.X"
-   - "Mouse movement executed"
+   - "Hotkey pressed! AimPlayers: False" (always shown)
+   - Detailed movement info (only with detailed logging enabled)
 
 ## Common Issues and Solutions
 
@@ -61,32 +80,48 @@
 ### Issue: No entities found
 **Check**: Are there actually monsters within your aim range (default 600 units)?
 **Check**: Are you in an area with hostile monsters?
+**Check**: Are all monsters invulnerable? The plugin now skips invulnerable monsters.
 
 ### Issue: Mouse not moving
 **Check**: Are targets on screen? Off-screen targets are filtered out.
-**Check**: Are you getting "Mouse movement executed" in the logs?
+**Check**: Are all targets invulnerable? Enable detailed logging to see filtering details.
 
-### Issue: Mouse moves but to wrong location
-**Check**: Are you in windowed or windowed fullscreen mode?
-**Check**: Window offset calculations in the logs.
+### Issue: Targeting invulnerable monsters
+**Fixed**: Plugin now detects and ignores invulnerable monsters with:
+- Zero health
+- Immunity buffs
+- Cannot be damaged stats
+- Boss transition phases
+
+### Issue: Too much debug spam
+**Fixed**: Enable "Detailed Debug Logging" only when needed:
+- Essential messages are always shown
+- Technical details are hidden by default
+- Status checks no longer flash constantly
 
 ## Debug Log Examples
 
-### Successful targeting:
+### Normal Operation (Default Logging):
+```
+Hotkey pressed! AimPlayers: False
+```
+
+### With Detailed Debug Logging Enabled:
 ```
 Key detection: AimKey (A) pressed, starting aim sequence
 MonsterAim: Found 12 valid entities before distance check
-MonsterAim: Found 3 entities within range 600
-Targeting monster with weight: 25.0, distance: 234.5, path: Metadata/Monsters/...
+MonsterAim: Found 8 entities within range 600
+MonsterAim: Sorted 8 targets by weight
+Targeting monster with weight: 25.0, distance: 234.5
 Final mouse position: 640.0, 360.0
 Mouse movement executed
 ```
 
-### No targets available:
+### When invulnerable monsters are detected:
 ```
-Key detection: AimKey (A) pressed, starting aim sequence
-MonsterAim: Found 0 valid entities before distance check
-No monsters found within range
+Hotkey pressed! AimPlayers: False
+MonsterAim: Found 5 valid entities before distance check
+(Note: Invulnerable monsters are filtered out at the entity selection stage)
 ```
 
 ## Settings to Adjust
@@ -99,6 +134,11 @@ No monsters found within range
 ### If no targets found:
 - Increase "Aim Range" setting
 - Check if "Aim Players Instead" is enabled (should be off for monster targeting)
+- Verify monsters aren't all invulnerable
+
+### If debug output is too noisy:
+- Keep "Detailed Debug Logging" disabled for normal use
+- Only enable when troubleshooting specific issues
 
 ### If mouse movement is too fast/slow:
 - Adjust "Aim Loop Delay" setting
@@ -109,6 +149,8 @@ No monsters found within range
 - Aim Range: 600 units
 - Aim Players Instead: False (targets monsters)
 - Aim Loop Delay: 124ms
+- Detailed Debug Logging: False (minimal output)
+- Debug Monster Weight: False (no weight display)
 - Unique monsters: +20 weight (highest priority)
 - Rare monsters: +15 weight
 - Magic monsters: +10 weight

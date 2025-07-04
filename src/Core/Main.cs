@@ -101,42 +101,57 @@ namespace Aimbot.Core
                 bool inventoryOpen = GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible;
                 bool leftPanelOpen = GameController.Game.IngameState.IngameUi.OpenLeftPanel.IsVisible;
                 
-                // Add periodic debugging info
-                if (_aimTimer.ElapsedMilliseconds % 2000 < 50) // Log every 2 seconds (with 50ms window)
+                // Add periodic debugging info only if detailed logging is enabled
+                if (Settings.DetailedDebugLogging.Value && _aimTimer.ElapsedMilliseconds % 2000 < 50) // Log every 2 seconds (with 50ms window)
                 {
                     LogMessage($"Status check - Key pressed: {keyPressed}, Inventory open: {inventoryOpen}, Left panel open: {leftPanelOpen}, Aiming: {_aiming}", 1);
                 }
                 
                 if (keyPressed && !inventoryOpen && !leftPanelOpen)
                 {
-                    LogMessage($"Key detection: AimKey ({Settings.AimKey.Value}) pressed, starting aim sequence", 1);
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Key detection: AimKey ({Settings.AimKey.Value}) pressed, starting aim sequence", 1);
+                    }
                     
                     if (_aiming) 
                     {
-                        LogMessage("Already aiming, skipping", 1);
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Already aiming, skipping", 1);
+                        }
                         return;
                     }
                     
                     _aiming = true;
-                    LogMessage($"Hotkey pressed! AimPlayers: {Settings.AimPlayers.Value}, Timer: {_aimTimer.ElapsedMilliseconds}ms", 1);
+                    LogMessage($"Hotkey pressed! AimPlayers: {Settings.AimPlayers.Value}", 1);
                     Aimbot();
                 }
                 else
                 {
                     if (_aiming)
                     {
-                        LogMessage("Key released, stopping aim", 1);
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Key released, stopping aim", 1);
+                        }
                         _aiming = false;
                     }
                     
                     if (_mouseWasHeldDown)
                     {
-                        LogMessage("Restoring mouse position", 1);
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Restoring mouse position", 1);
+                        }
                         _mouseWasHeldDown = false;
                         if (Settings.RMousePos.Value) 
                         {
                             Mouse.SetCursorPos(_oldMousePos);
-                            LogMessage($"Mouse restored to: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                            if (Settings.DetailedDebugLogging.Value)
+                            {
+                                LogMessage($"Mouse restored to: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                            }
                         }
                     }
                 }
@@ -144,7 +159,10 @@ namespace Aimbot.Core
             catch (Exception e)
             {
                 LogError("Something went wrong in Render: " + e.Message, 5);
-                LogError("Stack trace: " + e.StackTrace, 5);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogError("Stack trace: " + e.StackTrace, 5);
+                }
             }
         }
 
@@ -235,16 +253,63 @@ namespace Aimbot.Core
             return IgnoredMonsters.Any(ignoreString => path.ToLower().Contains(ignoreString.ToLower())); 
         }
 
+        private bool IsInvulnerable(Entity entity)
+        {
+            if (!entity.HasComponent<Life>()) return true; // No life component = invulnerable
+            
+            var life = entity.GetComponent<Life>();
+            
+            // Check if health is at 0 or invalid
+            if (life.CurHP <= 0) return true;
+            
+            // Check for invulnerability stats
+            if (TryGetStat("cannot_be_damaged", entity) > 0) return true;
+            if (TryGetStat("cannot_die", entity) > 0) return true;
+            if (TryGetStat("immune_to_damage", entity) > 0) return true;
+            
+            // Check for common invulnerability buffs
+            if (HasAnyBuff(entity, new[]
+            {
+                "invulnerable",
+                "immune_to_damage",
+                "cannot_be_damaged",
+                "phase_run",
+                "grace_period",
+                "immune",
+                "invulnerable_to_damage",
+                "cannot_take_damage"
+            }))
+            {
+                return true;
+            }
+            
+            // Check for specific invulnerability conditions
+            // Some monsters become invulnerable when transitioning phases
+            if (entity.Path.Contains("BossTransition") || entity.Path.Contains("Invulnerable"))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
         private void Aimbot()
         {
             if (_aimTimer.ElapsedMilliseconds < Settings.AimLoopDelay.Value)
             {
-                LogMessage($"Timer not ready: {_aimTimer.ElapsedMilliseconds}ms < {Settings.AimLoopDelay.Value}ms", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Timer not ready: {_aimTimer.ElapsedMilliseconds}ms < {Settings.AimLoopDelay.Value}ms", 1);
+                }
                 _aiming = false;
                 return;
             }
 
-            LogMessage($"Aimbot running - AimPlayers: {Settings.AimPlayers.Value}", 1);
+            if (Settings.DetailedDebugLogging.Value)
+            {
+                LogMessage($"Aimbot running - AimPlayers: {Settings.AimPlayers.Value}", 1);
+            }
+            
             if (Settings.AimPlayers.Value)
                 PlayerAim();
             else
@@ -281,12 +346,18 @@ namespace Aimbot.Core
                                                             .OrderBy(x => x.Item1)
                                                             .ToList();
             
-            LogMessage($"PlayerAim: Found {AlivePlayers.Count} other players", 1);
+            if (Settings.DetailedDebugLogging.Value)
+            {
+                LogMessage($"PlayerAim: Found {AlivePlayers.Count} other players", 1);
+            }
             
             Tuple<float, Entity> closestMonster = AlivePlayers.FirstOrDefault(x => x.Item1 < Settings.AimRange.Value);
             if (closestMonster != null)
             {
-                LogMessage($"Targeting player at distance: {closestMonster.Item1}", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Targeting player at distance: {closestMonster.Item1}", 1);
+                }
                 
                 if (!_mouseWasHeldDown)
                 {
@@ -316,13 +387,19 @@ namespace Aimbot.Core
                 }
 
                 _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
-                LogMessage($"Moving mouse to {entityPosToScreen.X}, {entityPosToScreen.Y}", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Moving mouse to {entityPosToScreen.X}, {entityPosToScreen.Y}", 1);
+                }
                 // Use human-like movement instead of instant teleportation
                 Mouse.SetCursorPosition(entityPosToScreen + _clickWindowOffset);
             }
             else
             {
-                LogMessage("No players found within range", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage("No players found within range", 1);
+                }
             }
         }
 
@@ -381,6 +458,7 @@ namespace Aimbot.Core
                                                                     && TryGetStat("ignored_by_enemy_target_selection", x) == 0
                                                                     && TryGetStat("cannot_die", x) == 0
                                                                     && TryGetStat("cannot_be_damaged", x) == 0
+                                                                    && !IsInvulnerable(x) // Check for invulnerability
                                                                     && !HasAnyBuff(x, new[]
                                                                        {
                                                                                "capture_monster_captured",
@@ -388,7 +466,10 @@ namespace Aimbot.Core
                                                                        }))
                                                            .ToList();
 
-            LogMessage($"MonsterAim: Found {validEntities.Count} valid entities before distance check", 1);
+            if (Settings.DetailedDebugLogging.Value)
+            {
+                LogMessage($"MonsterAim: Found {validEntities.Count} valid entities before distance check", 1);
+            }
 
             // Filter by distance using GameController.Player.Pos directly
             var entitiesInRange = validEntities.Where(x => 
@@ -397,11 +478,17 @@ namespace Aimbot.Core
                 return distance <= Settings.AimRange.Value;
             }).ToList();
 
-            LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
+            if (Settings.DetailedDebugLogging.Value)
+            {
+                LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
+            }
 
             if (!entitiesInRange.Any())
             {
-                LogMessage("No monsters found within range", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage("No monsters found within range", 1);
+                }
                 return;
             }
 
@@ -411,41 +498,64 @@ namespace Aimbot.Core
                 .OrderByDescending(x => x.Item1) // Sort by weight (highest first)
                 .ToList();
 
-            LogMessage($"MonsterAim: Sorted {aliveAndHostile.Count} targets by weight", 1);
+            if (Settings.DetailedDebugLogging.Value)
+            {
+                LogMessage($"MonsterAim: Sorted {aliveAndHostile.Count} targets by weight", 1);
+            }
 
             if (aliveAndHostile.Any())
             {
                 Tuple<float, Entity> HeightestWeightedTarget = aliveAndHostile.First(); // Take the highest weighted target
                 var distance = Vector3.Distance(GameController.Player.Pos, HeightestWeightedTarget.Item2.Pos);
-                LogMessage($"Targeting monster with weight: {HeightestWeightedTarget.Item1:F1}, distance: {distance:F1}, path: {HeightestWeightedTarget.Item2.Path}", 1);
+                
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Targeting monster with weight: {HeightestWeightedTarget.Item1:F1}, distance: {distance:F1}, path: {HeightestWeightedTarget.Item2.Path}", 1);
+                }
                 
                 if (!_mouseWasHeldDown)
                 {
                     _oldMousePos = Mouse.GetCursorPositionVector();
                     _mouseWasHeldDown = true;
-                    LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                    }
                 }
 
                 Camera camera = GameController.Game.IngameState.Camera;
                 Vector2 entityPosToScreen = camera.WorldToScreen(HeightestWeightedTarget.Item2.Pos.Translate(0, 0, 0));
                 
-                LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
-                LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
+                    LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
+                }
                 
                 RectangleF vectWindow = GameController.Window.GetWindowRectangle();
-                LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
+                
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
+                }
                 
                 // Check if target is on screen
                 if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
                 {
-                    LogMessage("Target off screen vertically", 1);
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Target off screen vertically", 1);
+                    }
                     _aiming = false;
                     return;
                 }
 
                 if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
                 {
-                    LogMessage("Target off screen horizontally", 1);
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Target off screen horizontally", 1);
+                    }
                     _aiming = false;
                     return;
                 }
@@ -454,16 +564,26 @@ namespace Aimbot.Core
                 _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
                 Vector2 finalMousePos = entityPosToScreen + _clickWindowOffset;
                 
-                LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
-                LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
+                    LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
+                }
                 
                 // Use smooth human-like movement
                 Mouse.SetCursorPosition(finalMousePos);
-                LogMessage("Mouse movement executed", 1);
+                
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage("Mouse movement executed", 1);
+                }
             }
             else
             {
-                LogMessage("No valid targets after sorting", 1);
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage("No valid targets after sorting", 1);
+                }
             }
         }
 

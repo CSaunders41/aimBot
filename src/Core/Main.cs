@@ -324,7 +324,8 @@ namespace Aimbot.Core
                 var playersInRange = GameController.Entities.Where(x => x?.HasComponent<Player>() == true && x.IsAlive).Count();
                 
                 // Display debug info on screen
-                var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}";
+                var mouseMode = Settings.ClickWithoutMouseMovement.Value ? "No Mouse Movement" : "With Mouse Movement";
+                var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}\nMode: {mouseMode}";
                 Graphics.DrawText(debugText, new Vector2(10, 100), Color.Yellow, 12);
                 
                 foreach (Entity entity in GameController.Entities)
@@ -613,45 +614,62 @@ namespace Aimbot.Core
                     LogMessage($"Targeting player at distance: {closestMonster.Item1}", 1);
                 }
                 
-                if (!_mouseWasHeldDown)
+                if (Settings.ClickWithoutMouseMovement.Value)
                 {
-                    _oldMousePos = Mouse.GetCursorPositionVector();
-                    _mouseWasHeldDown = true;
+                    // No mouse movement mode - just trigger the action
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Click without mouse movement mode - skipping mouse positioning", 1);
+                    }
+                    
+                    // Perform auto-click if enabled
+                    LogMessage("About to call PerformAutoClick (no mouse movement)", 1);
+                    PerformAutoClick();
+                    LogMessage("PerformAutoClick call completed (no mouse movement)", 1);
                 }
+                else
+                {
+                    // Normal mouse movement mode
+                    if (!_mouseWasHeldDown)
+                    {
+                        _oldMousePos = Mouse.GetCursorPositionVector();
+                        _mouseWasHeldDown = true;
+                    }
 
-                if (closestMonster.Item1 >= Settings.AimRange.Value)
-                {
-                    _aiming = false;
-                    return;
-                }
+                    if (closestMonster.Item1 >= Settings.AimRange.Value)
+                    {
+                        _aiming = false;
+                        return;
+                    }
 
-                Camera camera = GameController.Game.IngameState.Camera;
-                Vector2 entityPosToScreen = camera.WorldToScreen(closestMonster.Item2.Pos.Translate(0, 0, 0));
-                RectangleF vectWindow = GameController.Window.GetWindowRectangle();
-                if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
-                {
-                    _aiming = false;
-                    return;
-                }
+                    Camera camera = GameController.Game.IngameState.Camera;
+                    Vector2 entityPosToScreen = camera.WorldToScreen(closestMonster.Item2.Pos.Translate(0, 0, 0));
+                    RectangleF vectWindow = GameController.Window.GetWindowRectangle();
+                    if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
+                    {
+                        _aiming = false;
+                        return;
+                    }
 
-                if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
-                {
-                    _aiming = false;
-                    return;
-                }
+                    if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
+                    {
+                        _aiming = false;
+                        return;
+                    }
 
-                _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Moving mouse to {entityPosToScreen.X}, {entityPosToScreen.Y}", 1);
+                    _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Moving mouse to {entityPosToScreen.X}, {entityPosToScreen.Y}", 1);
+                    }
+                    // Use human-like movement instead of instant teleportation
+                    Mouse.SetCursorPosition(entityPosToScreen + _clickWindowOffset);
+                    
+                    // Perform auto-click if enabled
+                    LogMessage("About to call PerformAutoClick", 1);
+                    PerformAutoClick();
+                    LogMessage("PerformAutoClick call completed", 1);
                 }
-                // Use human-like movement instead of instant teleportation
-                Mouse.SetCursorPosition(entityPosToScreen + _clickWindowOffset);
-                
-                // Perform auto-click if enabled
-                LogMessage("About to call PerformAutoClick", 1);
-                PerformAutoClick();
-                LogMessage("PerformAutoClick call completed", 1);
             }
             else
             {
@@ -834,75 +852,92 @@ namespace Aimbot.Core
                     // Log targeted monster to debug file
                     LogMonsterToFile(HeightestWeightedTarget.Item2, HeightestWeightedTarget.Item1, distance, "TARGETING");
                     
-                    if (!_mouseWasHeldDown)
+                    if (Settings.ClickWithoutMouseMovement.Value)
                     {
-                        _oldMousePos = Mouse.GetCursorPositionVector();
-                        _mouseWasHeldDown = true;
+                        // No mouse movement mode - just trigger the action
                         if (Settings.DetailedDebugLogging.Value)
                         {
-                            LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                            LogMessage("Click without mouse movement mode - skipping mouse positioning", 1);
                         }
+                        
+                        // Perform auto-click if enabled
+                        LogMessage("About to call PerformAutoClick (no mouse movement)", 1);
+                        PerformAutoClick();
+                        LogMessage("PerformAutoClick call completed (no mouse movement)", 1);
                     }
+                    else
+                    {
+                        // Normal mouse movement mode
+                        if (!_mouseWasHeldDown)
+                        {
+                            _oldMousePos = Mouse.GetCursorPositionVector();
+                            _mouseWasHeldDown = true;
+                            if (Settings.DetailedDebugLogging.Value)
+                            {
+                                LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                            }
+                        }
 
-                    Camera camera = GameController.Game.IngameState.Camera;
-                    Vector2 entityPosToScreen = camera.WorldToScreen(HeightestWeightedTarget.Item2.Pos.Translate(0, 0, 0));
-                    
-                    if (Settings.DetailedDebugLogging.Value)
-                    {
-                        LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
-                        LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
-                    }
-                    
-                    RectangleF vectWindow = GameController.Window.GetWindowRectangle();
-                    
-                    if (Settings.DetailedDebugLogging.Value)
-                    {
-                        LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
-                    }
-                    
-                    // Check if target is on screen
-                    if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
-                    {
+                        Camera camera = GameController.Game.IngameState.Camera;
+                        Vector2 entityPosToScreen = camera.WorldToScreen(HeightestWeightedTarget.Item2.Pos.Translate(0, 0, 0));
+                        
                         if (Settings.DetailedDebugLogging.Value)
                         {
-                            LogMessage("Target off screen vertically", 1);
+                            LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
+                            LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
                         }
-                        _aiming = false;
-                        return;
-                    }
-
-                    if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
-                    {
+                        
+                        RectangleF vectWindow = GameController.Window.GetWindowRectangle();
+                        
                         if (Settings.DetailedDebugLogging.Value)
                         {
-                            LogMessage("Target off screen horizontally", 1);
+                            LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
                         }
-                        _aiming = false;
-                        return;
-                    }
+                        
+                        // Check if target is on screen
+                        if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
+                        {
+                            if (Settings.DetailedDebugLogging.Value)
+                            {
+                                LogMessage("Target off screen vertically", 1);
+                            }
+                            _aiming = false;
+                            return;
+                        }
 
-                    // Calculate final mouse position
-                    _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
-                    Vector2 finalMousePos = entityPosToScreen + _clickWindowOffset;
-                    
-                    if (Settings.DetailedDebugLogging.Value)
-                    {
-                        LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
-                        LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
+                        if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
+                        {
+                            if (Settings.DetailedDebugLogging.Value)
+                            {
+                                LogMessage("Target off screen horizontally", 1);
+                            }
+                            _aiming = false;
+                            return;
+                        }
+
+                        // Calculate final mouse position
+                        _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
+                        Vector2 finalMousePos = entityPosToScreen + _clickWindowOffset;
+                        
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
+                            LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
+                        }
+                        
+                        // Use smooth human-like movement
+                        Mouse.SetCursorPosition(finalMousePos);
+                        
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Mouse movement executed", 1);
+                        }
+                        
+                        // Perform auto-click if enabled
+                        LogMessage("About to call PerformAutoClick", 1);
+                        PerformAutoClick();
+                        LogMessage("PerformAutoClick call completed", 1);
                     }
-                    
-                    // Use smooth human-like movement
-                    Mouse.SetCursorPosition(finalMousePos);
-                    
-                    if (Settings.DetailedDebugLogging.Value)
-                    {
-                        LogMessage("Mouse movement executed", 1);
-                    }
-                    
-                    // Perform auto-click if enabled
-                    LogMessage("About to call PerformAutoClick", 1);
-                    PerformAutoClick();
-                    LogMessage("PerformAutoClick call completed", 1);
                 }
                 else
                 {
@@ -1030,7 +1065,8 @@ namespace Aimbot.Core
         {
             try
             {
-                LogMessage($"PerformAutoClick called - AutomaticTargeting enabled: {Settings.AutomaticTargeting.Value}", 1);
+                string mode = Settings.ClickWithoutMouseMovement.Value ? "No Mouse Movement" : "With Mouse Movement";
+                LogMessage($"PerformAutoClick called - AutomaticTargeting enabled: {Settings.AutomaticTargeting.Value}, Mode: {mode}", 1);
                 
                 // In automatic targeting mode, always perform auto-click
                 // In manual mode, auto-click is disabled since manual clicking is expected

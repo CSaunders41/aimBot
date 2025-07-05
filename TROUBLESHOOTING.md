@@ -89,6 +89,17 @@
 - Delay prevents rapid-fire clicking and allows user intervention
 - Works only in automatic targeting mode - manual mode is unaffected
 
+### 12. Click Without Mouse Movement (NEW)
+**Problem**: Some skills don't require precise aiming (AoE skills, auto-targeting abilities, auras, ground-targeted skills) but users still wanted automated clicking when enemies are nearby.
+**Fix**: Added "Click Without Mouse Movement" option:
+- New "Click Without Mouse Movement (For AoE Skills)" setting for skills that don't need aiming
+- Plugin detects enemies in range and triggers auto-click without moving the mouse
+- Perfect for AoE skills, auras, auto-targeting abilities, or any skill where mouse position doesn't matter
+- Mouse cursor stays exactly where you positioned it
+- Still respects all other settings: pause system, delays, target filtering, etc.
+- Works in both automatic and manual targeting modes
+- Debug display shows current mode: "With Mouse Movement" or "No Mouse Movement"
+
 ## Testing Steps
 
 ### Step 1: Choose Your Mode
@@ -167,6 +178,21 @@
 6. Test the "Auto-Click Delay" by setting it to 1000ms (1 second):
    - You should see "Auto-click in: XXXms" countdown on screen
    - This gives you time to react before the click happens
+
+### Step 8b: Test Click Without Mouse Movement (For AoE Skills)
+1. Enable "Click Without Mouse Movement (For AoE Skills)" setting
+2. Position your mouse cursor where you want it to stay
+3. Enable "Automatic Targeting" mode
+4. Go near monsters - the plugin should:
+   - Detect enemies in range
+   - Trigger auto-click without moving your mouse
+   - Your mouse cursor should stay exactly where you positioned it
+5. With "Debug Monster Weight" enabled, you should see "Mode: No Mouse Movement"
+6. Perfect for skills like:
+   - Area of Effect abilities (Cyclone, Righteous Fire, etc.)
+   - Auto-targeting skills (Summons, Totems)
+   - Auras and buffs that don't need aiming
+   - Ground-targeted skills where mouse position doesn't matter
 
 ### Step 9: Test Debug File Logging (Optional)
 1. Enable "Log Monsters to File" in plugin settings
@@ -304,6 +330,27 @@
 **Solution**: Avoid using the pause key and it won't interfere
 **Note**: The pause system only activates when you press the pause key
 
+### Issue: Mouse keeps moving when I want to use AoE skills
+**Solution**: Enable "Click Without Mouse Movement (For AoE Skills)" setting
+**Solution**: This is perfect for skills that don't need precise aiming
+**Use cases**: Cyclone, Righteous Fire, Auras, Totems, Summons, ground-targeted skills
+
+### Issue: Click without mouse movement not working
+**Check**: Make sure "Click Without Mouse Movement (For AoE Skills)" is enabled
+**Check**: Verify automatic targeting is working (you should see detection messages)
+**Check**: Ensure you have proper auto-click button settings configured
+**Debug**: Enable debug mode to see "Mode: No Mouse Movement" confirmation
+
+### Issue: Want precise aiming for some skills but not others
+**Solution**: Toggle "Click Without Mouse Movement" on/off as needed for different skills
+**Tip**: This setting can be changed on-the-fly without restarting the plugin
+**Workflow**: Enable for AoE skills, disable for precise targeting skills
+
+### Issue: Mouse not staying in position with "no mouse movement" mode
+**Check**: Verify the setting is actually enabled in the plugin settings
+**Check**: Make sure you're not in manual mode (which might move mouse for other reasons)
+**Debug**: Look for "Click without mouse movement mode - skipping mouse positioning" messages
+
 ## Debug Log Examples
 
 ### Automatic Targeting Mode (Default Logging):
@@ -393,9 +440,12 @@ Automatic targeting (no valid targets)
 - Aim Loop Delay: 124ms
 - Detailed Debug Logging: False (minimal output)
 - Debug Monster Weight: False (no weight display)
-- Auto Click: False (disabled by default)
+- Automatic Targeting: False (manual mode by default)
 - Auto Click Button: 0 (Left Click)
 - Auto Click Delay: 50ms
+- Click Without Mouse Movement: False (normal aiming by default)
+- Pause Automatic Targeting Key: P
+- Auto-Click Delay (ms): 200ms
 - Unique monsters: +20 weight (highest priority)
 - Rare monsters: +15 weight
 - Magic monsters: +10 weight

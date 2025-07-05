@@ -33,7 +33,7 @@ Access plugin settings via **F12 → Aim Bot**:
 - **Debug Monster Weight**: Show weight values above monsters
 - **Detailed Debug Logging**: Enable verbose technical logging for troubleshooting
 - **Auto Click**: Automatically click when targeting (default: disabled)
-- **Auto Click Button**: Which mouse button to press (Left Click, Right Click, Middle Click)
+- **Auto Click Button**: Which mouse button to press (0=Left Click, 1=Right Click, 2=Middle Click)
 - **Auto Click Delay**: Delay before clicking after mouse movement (default: 50ms)
 
 #### Monster Priority Weights

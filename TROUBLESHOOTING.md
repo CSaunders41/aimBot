@@ -81,10 +81,19 @@
 
 ### Step 6: Test Auto-Click (Optional)
 1. Enable "Auto Click" in plugin settings
-2. Choose desired "Auto Click Button" (Left Click recommended for attacks)
+2. Choose desired "Auto Click Button" (0=Left Click, 1=Right Click, 2=Middle Click)
 3. Adjust "Auto Click Delay" if needed (50ms default works well)
 4. Hold 'A' key near monsters and verify automatic clicking occurs
-5. Watch for "Auto-clicked: [Button]" messages in detailed logging
+5. Watch for debug messages like "About to call PerformAutoClick" and "Auto-clicked: [Button]"
+
+### Step 7: Debug Auto-Click Issues
+1. Look for these specific messages in the logs when testing auto-click:
+   - "About to call PerformAutoClick" (confirms the method is being called)
+   - "PerformAutoClick called - AutoClick enabled: True" (confirms setting is enabled)
+   - "Auto-click settings - Button: [number] ([name])" (shows current settings)
+   - "Executing [button] click" and "[button] click completed" (confirms click execution)
+2. If you don't see these messages, auto-click may not be reaching the execution point
+3. If you see error messages, they will help identify the specific issue
 
 ## Common Issues and Solutions
 
@@ -116,9 +125,10 @@
 
 ### Issue: Auto-click not working
 **Check**: Is "Auto Click" enabled in plugin settings?
-**Check**: Is the correct mouse button selected for your attacks?
+**Check**: Is the correct mouse button selected (0=Left, 1=Right, 2=Middle)?
 **Check**: Try increasing "Auto Click Delay" if clicks seem to miss
 **Check**: Verify the game accepts the selected mouse button for your skills
+**Debug**: Look for "About to call PerformAutoClick" messages in logs
 
 ### Issue: Auto-click too fast/slow
 **Solution**: Adjust "Auto Click Delay" setting:
@@ -185,7 +195,7 @@ MonsterAim: Found 5 valid entities before distance check
 - Detailed Debug Logging: False (minimal output)
 - Debug Monster Weight: False (no weight display)
 - Auto Click: False (disabled by default)
-- Auto Click Button: Left Click
+- Auto Click Button: 0 (Left Click)
 - Auto Click Delay: 50ms
 - Unique monsters: +20 weight (highest priority)
 - Rare monsters: +15 weight

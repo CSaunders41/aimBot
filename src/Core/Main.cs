@@ -395,7 +395,9 @@ namespace Aimbot.Core
                 Mouse.SetCursorPosition(entityPosToScreen + _clickWindowOffset);
                 
                 // Perform auto-click if enabled
+                LogMessage("About to call PerformAutoClick", 1);
                 PerformAutoClick();
+                LogMessage("PerformAutoClick call completed", 1);
             }
             else
             {
@@ -582,7 +584,9 @@ namespace Aimbot.Core
                 }
                 
                 // Perform auto-click if enabled
+                LogMessage("About to call PerformAutoClick", 1);
                 PerformAutoClick();
+                LogMessage("PerformAutoClick call completed", 1);
             }
             else
             {
@@ -665,40 +669,65 @@ namespace Aimbot.Core
 
         private void PerformAutoClick()
         {
-            if (!Settings.AutoClick.Value) return;
-            
             try
             {
+                LogMessage($"PerformAutoClick called - AutoClick enabled: {Settings.AutoClick.Value}", 1);
+                
+                if (!Settings.AutoClick.Value) 
+                {
+                    LogMessage("Auto-click is disabled, skipping", 1);
+                    return;
+                }
+                
+                string buttonName = Settings.AutoClickButton.Value switch
+                {
+                    0 => "Left Click",
+                    1 => "Right Click", 
+                    2 => "Middle Click",
+                    _ => "Unknown"
+                };
+                
+                LogMessage($"Auto-click settings - Button: {Settings.AutoClickButton.Value} ({buttonName}), Delay: {Settings.AutoClickDelay.Value}ms", 1);
+                
                 // Add a small delay before clicking
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);
                 
+                LogMessage($"About to perform auto-click with button: {Settings.AutoClickButton.Value} ({buttonName})", 1);
+                
                 switch (Settings.AutoClickButton.Value)
                 {
-                    case "Left Click":
+                    case 0: // Left Click
+                        LogMessage("Executing left click", 1);
                         Mouse.LeftMouseDown();
                         System.Threading.Thread.Sleep(10); // Brief hold
                         Mouse.LeftMouseUp();
+                        LogMessage("Left click completed", 1);
                         break;
-                    case "Right Click":
+                    case 1: // Right Click
+                        LogMessage("Executing right click", 1);
                         Mouse.RightMouseDown();
                         System.Threading.Thread.Sleep(10); // Brief hold
                         Mouse.RightMouseUp();
+                        LogMessage("Right click completed", 1);
                         break;
-                    case "Middle Click":
+                    case 2: // Middle Click
+                        LogMessage("Executing middle click", 1);
                         Mouse.MiddleMouseDown();
                         System.Threading.Thread.Sleep(10); // Brief hold
                         Mouse.MiddleMouseUp();
+                        LogMessage("Middle click completed", 1);
                         break;
+                    default:
+                        LogError($"Unknown auto-click button value: {Settings.AutoClickButton.Value}", 3);
+                        return;
                 }
                 
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Auto-clicked: {Settings.AutoClickButton.Value}", 1);
-                }
+                LogMessage($"Auto-clicked: {buttonName}", 1);
             }
             catch (Exception e)
             {
-                LogError($"Auto-click failed: {e.Message}", 3);
+                LogError($"Auto-click failed: {e.Message}", 5);
+                LogError($"Stack trace: {e.StackTrace}", 5);
             }
         }
     }

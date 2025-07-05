@@ -1,1 +1,5 @@
-
+Build failed:
+[7/5/2025 9:29:39 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1067, 64)] CS0206: A non ref-returning
+property or indexer may not be used as an out or ref value
+[7/5/2025 9:29:39 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1101, 102)] CS1503: Argument 3: cannot
+convert from 'bool' to 'ImGuiNET.ImGuiChildFlags'

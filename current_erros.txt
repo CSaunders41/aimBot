@@ -1,5 +1,25 @@
 Build failed:
-[7/5/2025 9:29:39 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1067, 64)] CS0206: A non ref-returning
-property or indexer may not be used as an out or ref value
-[7/5/2025 9:29:39 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1101, 102)] CS1503: Argument 3: cannot
-convert from 'bool' to 'ImGuiNET.ImGuiChildFlags'
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1174, 17)] CS1524:
+Expected catch or finally
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1176, 13)] CS1519:
+Invalid token 'catch' in class, record, struct, or interface member declaration
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1176, 31)] CS8124:
+Tuple must contain at least two elements.
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1177, 13)] CS1519:
+Invalid token '{' in class, record, struct, or interface member declaration
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 26)] CS1001:
+Identifier expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 81)] CS1031:
+Type expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 81)] CS1001:
+Identifier expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 83)] CS1031:
+Type expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 83)] CS1001:
+Identifier expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1178, 83)] CS1003:
+Syntax error, ',' expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1183, 5)] CS1022:
+Type or namespace definition, or end-of-file expected
+[7/5/2025 9:38:00 AM, C:\Program Files (x86)\Grinding Gear Games\Scripts\POE1\ExileApi-Compiled-3.26.0.0.4\Plugins\Source\aimBot\src\Core\Main.cs(1184, 1)] CS1022:
+Type or namespace definition, or end-of-file expected

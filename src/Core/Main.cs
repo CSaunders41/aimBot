@@ -1171,7 +1171,6 @@ namespace Aimbot.Core
                     ImGui.Text("Tip: Hold Ctrl+Click 'Clear All' to remove all monsters");
                 }
                 ImGui.End();
-                }
             }
             catch (Exception e)
             {

@@ -23,6 +23,7 @@ using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
 using SharpDX;
 using Player = ExileCore.PoEMemory.Components.Player;
+using ImGuiVector2 = System.Numerics.Vector2;
 
 namespace Aimbot.Core
 {
@@ -1098,7 +1099,7 @@ namespace Aimbot.Core
                     // Current ignored monsters list
                     ImGui.Text($"Currently Ignored Monsters ({_ignoredMonstersList.Count}):");
                     
-                    if (ImGui.BeginChild("IgnoredMonstersList", new System.Numerics.Vector2(0, 300), true))
+                    if (ImGui.BeginChild("IgnoredMonstersList", new ImGuiVector2(0, 300), true))
                     {
                         for (int i = 0; i < _ignoredMonstersList.Count; i++)
                         {

@@ -24,6 +24,9 @@ namespace Aimbot.Core
         [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);
         [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(false);
         
+        //=== IGNORED MONSTERS SETTINGS ===
+        [Menu("Show Ignored Monsters Editor")] public ToggleNode ShowIgnoredMonstersEditor { get; set; } = new ToggleNode(false);
+        
         //=== DEBUG SETTINGS ===
         [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
         [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);

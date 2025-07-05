@@ -47,7 +47,18 @@
 - Detailed technical information is only shown when enabled
 - Periodic status checks are hidden unless debugging is enabled
 
-### 8. Null Reference Exception Fixes
+### 8. In-Game Ignored Monsters Editor (NEW)
+**Problem**: Users had to manually edit the "Ignored Monsters.txt" file and reload the plugin to manage ignored monsters.
+**Fix**: Added a complete in-game editor for managing ignored monsters:
+- Visual list of all currently ignored monsters
+- Add new monsters by typing their path
+- Remove monsters with right-click or selection + button
+- Clear all monsters with safety confirmation (Ctrl+Click)
+- Reload from file if external changes are made
+- Automatic saving to "Ignored Monsters.txt" file
+- Real-time updates without plugin restart required
+
+### 9. Null Reference Exception Fixes
 **Problem**: Plugin would crash with "Object reference not set to an instance of an object" errors.
 **Fix**: Added comprehensive null checks and error handling:
 - All critical methods now have try-catch blocks
@@ -105,7 +116,21 @@
 2. The plugin should skip these monsters and target others
 3. Look for monsters during boss transitions or with immunity effects
 
-### Step 7: Debug Issues
+### Step 7: Test Ignored Monsters Editor
+1. Enable "Show Ignored Monsters Editor" in plugin settings
+2. A new window "Ignored Monsters Editor" will appear
+3. **Adding monsters**:
+   - Type monster path in the text box (e.g., "Metadata/Monsters/Avatar/Avatar")
+   - Click "Add Monster" to add it to the ignore list
+4. **Removing monsters**:
+   - Right-click any monster in the list and select "Remove"
+   - Or select a monster and click "Remove Selected"
+5. **Other features**:
+   - "Clear All" (requires Ctrl+Click for safety)
+   - "Reload from File" to refresh from external changes
+6. Changes are automatically saved to "Ignored Monsters.txt"
+
+### Step 8: Debug Issues
 1. Check log messages for mode confirmation:
    - "Mode: Automatic" or "Mode: Manual"
    - "Should Aim: True/False"
@@ -173,6 +198,23 @@
 - Decrease "Aim Range" to make it less aggressive
 - Adjust monster weight settings to prioritize certain targets
 - Use "Show Aim Range" to visualize the targeting area
+
+### Issue: Ignored monsters editor not working
+**Check**: Is "Show Ignored Monsters Editor" enabled in plugin settings?
+**Check**: Do you have write permissions to the plugin directory?
+**Solution**: Try "Reload from File" button if the list appears outdated
+**Note**: Changes are automatically saved to "Ignored Monsters.txt"
+
+### Issue: Cannot find monster path to ignore
+**Solution**: Enable "Detailed Debug Logging" and watch for targeting messages
+**Solution**: Look in the game files or community resources for monster paths
+**Tip**: Monster paths usually start with "Metadata/Monsters/"
+**Example**: "Metadata/Monsters/Avatar/Avatar" for Avatar of Thunder
+
+### Issue: Ignored monsters editor window disappeared
+**Solution**: Re-enable "Show Ignored Monsters Editor" in plugin settings
+**Solution**: Check if the window was moved off-screen
+**Note**: The editor window can be moved and resized like any ImGui window
 
 ### Issue: Plugin crashes with null reference errors
 **Fixed**: Plugin includes comprehensive error handling:

@@ -37,6 +37,11 @@ namespace Aimbot.Core
         private Vector2 _oldMousePos;
         public DateTime buildDate;
         public HashSet<string> IgnoredMonsters;
+        
+        // Ignored Monsters Editor UI variables
+        private string _newMonsterPath = "";
+        private List<string> _ignoredMonstersList = new List<string>();
+        private int _selectedIgnoredIndex = -1;
 
         public string[] LightlessGrub =
         {
@@ -76,6 +81,9 @@ namespace Aimbot.Core
             PluginVersion = $"{version}";
             IgnoredMonsters = LoadFile("Ignored Monsters");
             
+            // Initialize ignored monsters list for UI editing
+            RefreshIgnoredMonstersList();
+            
             // Initialize static Player utility references
             AimBot.Utilities.Player.Entity = GameController.Player;
             AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
@@ -108,6 +116,12 @@ namespace Aimbot.Core
                 }
                 
                 WeightDebug();
+                
+                // Render ignored monsters editor if enabled
+                if (Settings.ShowIgnoredMonstersEditor.Value)
+                {
+                    RenderIgnoredMonstersEditor();
+                }
                 
                 if (Settings.ShowAimRange.Value)
                 {
@@ -976,5 +990,191 @@ namespace Aimbot.Core
                 LogError($"Stack trace: {e.StackTrace}", 5);
             }
         }
+
+        #region Ignored Monsters Editor
+
+        private void RefreshIgnoredMonstersList()
+        {
+            try
+            {
+                _ignoredMonstersList.Clear();
+                if (IgnoredMonsters != null)
+                {
+                    _ignoredMonstersList.AddRange(IgnoredMonsters.OrderBy(x => x));
+                }
+            }
+            catch (Exception e)
+            {
+                LogError($"Error refreshing ignored monsters list: {e.Message}", 3);
+            }
+        }
+
+        private void SaveIgnoredMonstersToFile()
+        {
+            try
+            {
+                string filePath = $@"{DirectoryFullName}\Ignored Monsters.txt";
+                
+                List<string> fileLines = new List<string>
+                {
+                    "# Ignored Monsters Configuration",
+                    "# Add monster paths here to ignore them during targeting",
+                    "# Lines starting with # are comments",
+                    "# Example:",
+                    "# Metadata/Monsters/SomeAnnoying/Monster",
+                    ""
+                };
+                
+                // Add all ignored monsters
+                foreach (string monster in _ignoredMonstersList.Where(x => !string.IsNullOrWhiteSpace(x)))
+                {
+                    fileLines.Add(monster.Trim());
+                }
+                
+                File.WriteAllLines(filePath, fileLines);
+                
+                // Reload the HashSet
+                IgnoredMonsters = LoadFile("Ignored Monsters");
+                RefreshIgnoredMonstersList();
+                
+                LogMessage($"Saved {_ignoredMonstersList.Count} ignored monsters to file", 1);
+            }
+            catch (Exception e)
+            {
+                LogError($"Error saving ignored monsters: {e.Message}", 5);
+            }
+        }
+
+        private void ReloadIgnoredMonsters()
+        {
+            try
+            {
+                IgnoredMonsters = LoadFile("Ignored Monsters");
+                RefreshIgnoredMonstersList();
+                LogMessage("Reloaded ignored monsters from file", 1);
+            }
+            catch (Exception e)
+            {
+                LogError($"Error reloading ignored monsters: {e.Message}", 5);
+            }
+        }
+
+        private void RenderIgnoredMonstersEditor()
+        {
+            try
+            {
+                // Create a window for the ignored monsters editor
+                if (ImGui.Begin("Ignored Monsters Editor", ref Settings.ShowIgnoredMonstersEditor.Value))
+                {
+                    ImGui.Text("Manage monsters to ignore during targeting");
+                    ImGui.Separator();
+                    
+                    // Add new monster section
+                    ImGui.Text("Add New Monster Path:");
+                    ImGui.InputText("##NewMonsterPath", ref _newMonsterPath, 500);
+                    ImGui.SameLine();
+                    
+                    if (ImGui.Button("Add Monster"))
+                    {
+                        if (!string.IsNullOrWhiteSpace(_newMonsterPath))
+                        {
+                            string trimmedPath = _newMonsterPath.Trim();
+                            if (!_ignoredMonstersList.Contains(trimmedPath))
+                            {
+                                _ignoredMonstersList.Add(trimmedPath);
+                                SaveIgnoredMonstersToFile();
+                                _newMonsterPath = "";
+                                LogMessage($"Added monster to ignore list: {trimmedPath}", 1);
+                            }
+                            else
+                            {
+                                LogMessage($"Monster already in ignore list: {trimmedPath}", 1);
+                            }
+                        }
+                    }
+                    
+                    ImGui.Separator();
+                    
+                    // Current ignored monsters list
+                    ImGui.Text($"Currently Ignored Monsters ({_ignoredMonstersList.Count}):");
+                    
+                    if (ImGui.BeginChild("IgnoredMonstersList", new System.Numerics.Vector2(0, 300), true))
+                    {
+                        for (int i = 0; i < _ignoredMonstersList.Count; i++)
+                        {
+                            string monster = _ignoredMonstersList[i];
+                            
+                            // Selectable item
+                            bool isSelected = _selectedIgnoredIndex == i;
+                            if (ImGui.Selectable($"{monster}##ignored_{i}", isSelected))
+                            {
+                                _selectedIgnoredIndex = isSelected ? -1 : i;
+                            }
+                            
+                            // Right-click context menu
+                            if (ImGui.BeginPopupContextItem($"context_{i}"))
+                            {
+                                if (ImGui.MenuItem("Remove"))
+                                {
+                                    _ignoredMonstersList.RemoveAt(i);
+                                    SaveIgnoredMonstersToFile();
+                                    _selectedIgnoredIndex = -1;
+                                    LogMessage($"Removed monster from ignore list: {monster}", 1);
+                                }
+                                ImGui.EndPopup();
+                            }
+                        }
+                    }
+                    ImGui.EndChild();
+                    
+                    // Control buttons
+                    ImGui.Separator();
+                    
+                    if (ImGui.Button("Remove Selected") && _selectedIgnoredIndex >= 0 && _selectedIgnoredIndex < _ignoredMonstersList.Count)
+                    {
+                        string removedMonster = _ignoredMonstersList[_selectedIgnoredIndex];
+                        _ignoredMonstersList.RemoveAt(_selectedIgnoredIndex);
+                        SaveIgnoredMonstersToFile();
+                        _selectedIgnoredIndex = -1;
+                        LogMessage($"Removed monster from ignore list: {removedMonster}", 1);
+                    }
+                    
+                    ImGui.SameLine();
+                    
+                    if (ImGui.Button("Clear All"))
+                    {
+                        if (ImGui.GetIO().KeyCtrl) // Require Ctrl+Click for safety
+                        {
+                            _ignoredMonstersList.Clear();
+                            SaveIgnoredMonstersToFile();
+                            _selectedIgnoredIndex = -1;
+                            LogMessage("Cleared all ignored monsters", 1);
+                        }
+                        else
+                        {
+                            ImGui.SetTooltip("Hold Ctrl and click to clear all monsters");
+                        }
+                    }
+                    
+                    ImGui.SameLine();
+                    
+                    if (ImGui.Button("Reload from File"))
+                    {
+                        ReloadIgnoredMonsters();
+                    }
+                    
+                    ImGui.Separator();
+                    ImGui.Text("Tip: Right-click any monster in the list to remove it");
+                    ImGui.Text("Tip: Hold Ctrl+Click 'Clear All' to remove all monsters");
+                }
+                ImGui.End();
+            }
+            catch (Exception e)
+            {
+                LogError($"Error rendering ignored monsters editor: {e.Message}", 5);
+            }
+        }
+
+        #endregion
     }
 }

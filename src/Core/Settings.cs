@@ -10,18 +10,26 @@ namespace Aimbot.Core
     {
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
         
-        [Menu("Aim Key")] public HotkeyNode AimKey { get; set; } = Keys.A;
-        [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);
-        [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);
-        [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = new ToggleNode(false);
-        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(false);
-        [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
-        [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
-        [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
-        [Menu("Auto Click")] public ToggleNode AutoClick { get; set; } = new ToggleNode(false);
+        //=== TARGETING MODE SETTINGS ===
+        [Menu("Automatic Targeting (No Key Required)")] public ToggleNode AutomaticTargeting { get; set; } = new ToggleNode(false);
         [Menu("Auto Click Button (0=Left, 1=Right, 2=Middle)")] public RangeNode<int> AutoClickButton { get; set; } = new RangeNode<int>(0, 0, 2);
         [Menu("Auto Click Delay")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(50, 10, 500);
         
+        //=== MANUAL MODE SETTINGS ===
+        [Menu("Manual Aim Key (When Auto Mode Disabled)")] public HotkeyNode AimKey { get; set; } = Keys.A;
+        [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = new ToggleNode(false);
+        
+        //=== GENERAL SETTINGS ===
+        [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);
+        [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);
+        [Menu("Aim Players Instead")] public ToggleNode AimPlayers { get; set; } = new ToggleNode(false);
+        
+        //=== DEBUG SETTINGS ===
+        [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
+        [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
+        [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
+        
+        //=== MONSTER PRIORITY WEIGHTS ===
         [Menu("Unique Rarity Weight")] public RangeNode<int> UniqueRarityWeight { get; set; } = new RangeNode<int>(20, -200, 200);
         [Menu("Rare Rarity Weight")] public RangeNode<int> RareRarityWeight { get; set; } = new RangeNode<int>(15, -200, 200);
         [Menu("Magic Rarity Weight")] public RangeNode<int> MagicRarityWeight { get; set; } = new RangeNode<int>(10, -200, 200);

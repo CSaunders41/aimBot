@@ -119,22 +119,46 @@ namespace Aimbot.Core
                     }
                 }
 
-                // Check if key is currently pressed
-                bool keyPressed = Keyboard.IsKeyDown((int) Settings.AimKey.Value);
+                // Check UI state to prevent interference
                 bool inventoryOpen = GameController.Game.IngameState.IngameUi.InventoryPanel?.IsVisible ?? false;
                 bool leftPanelOpen = GameController.Game.IngameState.IngameUi.OpenLeftPanel?.IsVisible ?? false;
+                bool uiOpen = inventoryOpen || leftPanelOpen;
+                
+                // Determine if we should be aiming based on mode
+                bool shouldAim = false;
+                string aimReason = "";
+                
+                if (Settings.AutomaticTargeting.Value && !uiOpen)
+                {
+                    // Automatic mode: aim when enemies are in range
+                    shouldAim = HasTargetsInRange();
+                    aimReason = shouldAim ? "Automatic targeting (enemies in range)" : "Automatic targeting (no valid targets)";
+                }
+                else if (!Settings.AutomaticTargeting.Value && !uiOpen)
+                {
+                    // Manual mode: aim when key is pressed
+                    bool keyPressed = Keyboard.IsKeyDown((int) Settings.AimKey.Value);
+                    shouldAim = keyPressed;
+                    aimReason = keyPressed ? $"Manual key ({Settings.AimKey.Value}) pressed" : "Manual mode (key not pressed)";
+                }
+                else
+                {
+                    shouldAim = false;
+                    aimReason = "UI open - aiming disabled";
+                }
                 
                 // Add periodic debugging info only if detailed logging is enabled
                 if (Settings.DetailedDebugLogging.Value && _aimTimer.ElapsedMilliseconds % 2000 < 50) // Log every 2 seconds (with 50ms window)
                 {
-                    LogMessage($"Status check - Key pressed: {keyPressed}, Inventory open: {inventoryOpen}, Left panel open: {leftPanelOpen}, Aiming: {_aiming}", 1);
+                    string mode = Settings.AutomaticTargeting.Value ? "Automatic" : "Manual";
+                    LogMessage($"Mode: {mode}, UI Open: {uiOpen}, Should Aim: {shouldAim}, Currently Aiming: {_aiming}", 1);
                 }
                 
-                if (keyPressed && !inventoryOpen && !leftPanelOpen)
+                if (shouldAim)
                 {
                     if (Settings.DetailedDebugLogging.Value)
                     {
-                        LogMessage($"Key detection: AimKey ({Settings.AimKey.Value}) pressed, starting aim sequence", 1);
+                        LogMessage($"Aiming triggered: {aimReason}", 1);
                     }
                     
                     if (_aiming) 
@@ -147,7 +171,8 @@ namespace Aimbot.Core
                     }
                     
                     _aiming = true;
-                    LogMessage($"Hotkey pressed! AimPlayers: {Settings.AimPlayers.Value}", 1);
+                    string mode = Settings.AutomaticTargeting.Value ? "Automatic" : "Manual";
+                    LogMessage($"{mode} targeting activated! AimPlayers: {Settings.AimPlayers.Value}", 1);
                     Aimbot();
                 }
                 else
@@ -156,16 +181,17 @@ namespace Aimbot.Core
                     {
                         if (Settings.DetailedDebugLogging.Value)
                         {
-                            LogMessage("Key released, stopping aim", 1);
+                            LogMessage($"Stopping aim: {aimReason}", 1);
                         }
                         _aiming = false;
                     }
                     
-                    if (_mouseWasHeldDown)
+                    // Only restore mouse position in manual mode when key is released
+                    if (_mouseWasHeldDown && !Settings.AutomaticTargeting.Value)
                     {
                         if (Settings.DetailedDebugLogging.Value)
                         {
-                            LogMessage("Restoring mouse position", 1);
+                            LogMessage("Restoring mouse position (manual mode)", 1);
                         }
                         _mouseWasHeldDown = false;
                         if (Settings.RMousePos.Value) 
@@ -344,6 +370,72 @@ namespace Aimbot.Core
             {
                 LogError($"Error in IsInvulnerable: {e.Message}", 3);
                 return true; // Assume invulnerable if we can't determine
+            }
+        }
+
+        private bool HasTargetsInRange()
+        {
+            try
+            {
+                if (GameController?.Entities == null || GameController?.Player == null)
+                {
+                    return false;
+                }
+                
+                if (Settings.AimPlayers.Value)
+                {
+                    // Check for players in range
+                    var playersInRange = GameController.Entities.Where(x => x != null 
+                                                                           && x.IsValid
+                                                                           && x.HasComponent<Player>()
+                                                                           && x.IsAlive
+                                                                           && x.Address != GameController.Player.Address)
+                                                              .Any(x => 
+                                                              {
+                                                                  try
+                                                                  {
+                                                                      var distance = Vector3.Distance(GameController.Player.Pos, x.Pos);
+                                                                      return distance <= Settings.AimRange.Value;
+                                                                  }
+                                                                  catch
+                                                                  {
+                                                                      return false;
+                                                                  }
+                                                              });
+                    return playersInRange;
+                }
+                else
+                {
+                    // Check for monsters in range
+                    var monstersInRange = GameController.Entities.Where(x => x != null 
+                                                                            && x.IsValid
+                                                                            && x.HasComponent<Monster>()
+                                                                            && x.IsAlive
+                                                                            && x.IsHostile
+                                                                            && !IsIgnoredMonster(x.Path)
+                                                                            && !IsInvulnerable(x))
+                                                                 .Any(x => 
+                                                                 {
+                                                                     try
+                                                                     {
+                                                                         var distance = Vector3.Distance(GameController.Player.Pos, x.Pos);
+                                                                         return distance <= Settings.AimRange.Value;
+                                                                     }
+                                                                     catch
+                                                                     {
+                                                                         return false;
+                                                                     }
+                                                                 });
+                    return monstersInRange;
+                }
+            }
+            catch (Exception e)
+            {
+                if (Settings?.DetailedDebugLogging?.Value == true)
+                {
+                    LogError($"Error in HasTargetsInRange: {e.Message}", 3);
+                }
+                return false;
             }
         }
 
@@ -823,11 +915,13 @@ namespace Aimbot.Core
         {
             try
             {
-                LogMessage($"PerformAutoClick called - AutoClick enabled: {Settings.AutoClick.Value}", 1);
+                LogMessage($"PerformAutoClick called - AutomaticTargeting enabled: {Settings.AutomaticTargeting.Value}", 1);
                 
-                if (!Settings.AutoClick.Value) 
+                // In automatic targeting mode, always perform auto-click
+                // In manual mode, auto-click is disabled since manual clicking is expected
+                if (!Settings.AutomaticTargeting.Value) 
                 {
-                    LogMessage("Auto-click is disabled, skipping", 1);
+                    LogMessage("Manual mode active - auto-click is disabled, expecting manual click", 1);
                     return;
                 }
                 

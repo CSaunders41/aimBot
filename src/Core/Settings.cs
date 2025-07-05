@@ -31,6 +31,7 @@ namespace Aimbot.Core
         [Menu("Debug Monster Weight")] public ToggleNode DebugMonsterWeight { get; set; } = new ToggleNode(false);
         [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
         [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
+        [Menu("Log Monsters to File")] public ToggleNode LogMonstersToFile { get; set; } = new ToggleNode(false);
         
         //=== MONSTER PRIORITY WEIGHTS ===
         [Menu("Unique Rarity Weight")] public RangeNode<int> UniqueRarityWeight { get; set; } = new RangeNode<int>(20, -200, 200);

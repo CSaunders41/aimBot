@@ -43,6 +43,10 @@ namespace Aimbot.Core
         private string _newMonsterPath = "";
         private List<string> _ignoredMonstersList = new List<string>();
         private int _selectedIgnoredIndex = -1;
+        
+        // Debug file logging
+        private string _debugLogPath = "";
+        private readonly object _debugLogLock = new object();
 
         public string[] LightlessGrub =
         {
@@ -84,6 +88,9 @@ namespace Aimbot.Core
             
             // Initialize ignored monsters list for UI editing
             RefreshIgnoredMonstersList();
+            
+            // Initialize debug log file path
+            _debugLogPath = $@"{DirectoryFullName}\AimBot_Debug.log";
             
             // Initialize static Player utility references
             AimBot.Utilities.Player.Entity = GameController.Player;
@@ -692,6 +699,30 @@ namespace Aimbot.Core
                 {
                     LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
                 }
+                
+                // Log all monsters in range to debug file for potential ignoring
+                if (Settings.LogMonstersToFile.Value && entitiesInRange.Any())
+                {
+                    LogToDebugFile($"=== SCAN: Found {entitiesInRange.Count} monsters in range ===");
+                    foreach (var entity in entitiesInRange.Take(10)) // Limit to 10 to avoid spam
+                    {
+                        try
+                        {
+                            var distance = Vector3.Distance(GameController.Player.Pos, entity.Pos);
+                            var weight = AimWeightEB(entity);
+                            LogMonsterToFile(entity, weight, distance, "DETECTED");
+                        }
+                        catch (Exception e)
+                        {
+                            LogToDebugFile($"Error logging detected monster: {e.Message}");
+                        }
+                    }
+                    if (entitiesInRange.Count > 10)
+                    {
+                        LogToDebugFile($"... and {entitiesInRange.Count - 10} more monsters");
+                    }
+                    LogToDebugFile("=== END SCAN ===");
+                }
 
                 if (!entitiesInRange.Any())
                 {
@@ -733,6 +764,9 @@ namespace Aimbot.Core
                     {
                         LogMessage($"Targeting monster with weight: {HeightestWeightedTarget.Item1:F1}, distance: {distance:F1}, path: {HeightestWeightedTarget.Item2.Path}", 1);
                     }
+                    
+                    // Log targeted monster to debug file
+                    LogMonsterToFile(HeightestWeightedTarget.Item2, HeightestWeightedTarget.Item1, distance, "TARGETING");
                     
                     if (!_mouseWasHeldDown)
                     {
@@ -992,6 +1026,99 @@ namespace Aimbot.Core
             }
         }
 
+        #region Debug File Logging
+
+        private void LogToDebugFile(string message)
+        {
+            try
+            {
+                if (!Settings.LogMonstersToFile.Value) return;
+                
+                lock (_debugLogLock)
+                {
+                    string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    string logEntry = $"[{timestamp}] {message}\n";
+                    File.AppendAllText(_debugLogPath, logEntry);
+                }
+            }
+            catch (Exception e)
+            {
+                LogError($"Error writing to debug log file: {e.Message}", 5);
+            }
+        }
+
+        private void LogMonsterToFile(Entity entity, float weight, float distance, string action)
+        {
+            try
+            {
+                if (!Settings.LogMonstersToFile.Value || entity == null) return;
+                
+                string monsterName = entity.RenderName ?? "Unknown";
+                string monsterPath = entity.Path ?? "Unknown Path";
+                string rarity = "Normal";
+                
+                // Determine rarity
+                if (entity.HasComponent<ObjectMagicProperties>())
+                {
+                    var magicProps = entity.GetComponent<ObjectMagicProperties>();
+                    switch (magicProps.Rarity)
+                    {
+                        case MonsterRarity.White: rarity = "Normal"; break;
+                        case MonsterRarity.Magic: rarity = "Magic"; break;
+                        case MonsterRarity.Rare: rarity = "Rare"; break;
+                        case MonsterRarity.Unique: rarity = "Unique"; break;
+                    }
+                }
+                
+                string logEntry = $"{action} - Name: '{monsterName}' | Path: '{monsterPath}' | Rarity: {rarity} | Weight: {weight:F1} | Distance: {distance:F1}";
+                LogToDebugFile(logEntry);
+            }
+            catch (Exception e)
+            {
+                LogError($"Error logging monster to file: {e.Message}", 5);
+            }
+        }
+
+        private void ClearDebugLog()
+        {
+            try
+            {
+                lock (_debugLogLock)
+                {
+                    if (File.Exists(_debugLogPath))
+                    {
+                        File.WriteAllText(_debugLogPath, "=== AimBot Debug Log Cleared ===\n");
+                    }
+                }
+                LogMessage("Debug log file cleared", 1);
+            }
+            catch (Exception e)
+            {
+                LogError($"Error clearing debug log: {e.Message}", 5);
+            }
+        }
+
+        private void OpenDebugLogFile()
+        {
+            try
+            {
+                if (File.Exists(_debugLogPath))
+                {
+                    System.Diagnostics.Process.Start("notepad.exe", _debugLogPath);
+                }
+                else
+                {
+                    LogMessage("Debug log file doesn't exist yet. Enable 'Log Monsters to File' and target some monsters first.", 2);
+                }
+            }
+            catch (Exception e)
+            {
+                LogError($"Error opening debug log file: {e.Message}", 5);
+            }
+        }
+
+        #endregion
+
         #region Ignored Monsters Editor
 
         private void RefreshIgnoredMonstersList()
@@ -1167,8 +1294,29 @@ namespace Aimbot.Core
                     }
                     
                     ImGui.Separator();
-                    ImGui.Text("Tip: Right-click any monster in the list to remove it");
-                    ImGui.Text("Tip: Hold Ctrl+Click 'Clear All' to remove all monsters");
+                    ImGui.Text("Debug Log File:");
+                    
+                    if (ImGui.Button("Open Debug Log"))
+                    {
+                        OpenDebugLogFile();
+                    }
+                    
+                    ImGui.SameLine();
+                    
+                    if (ImGui.Button("Clear Debug Log"))
+                    {
+                        ClearDebugLog();
+                    }
+                    
+                    ImGui.SameLine();
+                    
+                    ImGui.Text($"(Enable 'Log Monsters to File' setting)");
+                    
+                    ImGui.Separator();
+                    ImGui.Text("Tips:");
+                    ImGui.Text("• Right-click any monster in the list to remove it");
+                    ImGui.Text("• Hold Ctrl+Click 'Clear All' to remove all monsters");
+                    ImGui.Text("• Use debug log to see monster paths for easy copying");
                 }
                 ImGui.End();
             }

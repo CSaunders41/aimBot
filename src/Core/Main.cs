@@ -1064,9 +1064,11 @@ namespace Aimbot.Core
         {
             try
             {
-                // Create a window for the ignored monsters editor
-                if (ImGui.Begin("Ignored Monsters Editor", ref Settings.ShowIgnoredMonstersEditor.Value))
+                // Create a window for the ignored monsters editor  
+                bool showEditor = Settings.ShowIgnoredMonstersEditor.Value;
+                if (ImGui.Begin("Ignored Monsters Editor", ref showEditor))
                 {
+                    Settings.ShowIgnoredMonstersEditor.Value = showEditor;
                     ImGui.Text("Manage monsters to ignore during targeting");
                     ImGui.Separator();
                     
@@ -1099,7 +1101,7 @@ namespace Aimbot.Core
                     // Current ignored monsters list
                     ImGui.Text($"Currently Ignored Monsters ({_ignoredMonstersList.Count}):");
                     
-                    if (ImGui.BeginChild("IgnoredMonstersList", new ImGuiVector2(0, 300), true))
+                    if (ImGui.BeginChild("IgnoredMonstersList", new ImGuiVector2(0, 300), ImGuiChildFlags.Border))
                     {
                         for (int i = 0; i < _ignoredMonstersList.Count; i++)
                         {
@@ -1169,6 +1171,7 @@ namespace Aimbot.Core
                     ImGui.Text("Tip: Hold Ctrl+Click 'Clear All' to remove all monsters");
                 }
                 ImGui.End();
+                }
             }
             catch (Exception e)
             {

@@ -19,6 +19,10 @@ namespace Aimbot.Core
         [Menu("Manual Aim Key (When Auto Mode Disabled)")] public HotkeyNode AimKey { get; set; } = Keys.A;
         [Menu("Restore Mouse Position")] public ToggleNode RMousePos { get; set; } = new ToggleNode(false);
         
+        //=== PAUSE/OVERRIDE SETTINGS ===
+        [Menu("Pause Automatic Targeting Key")] public HotkeyNode PauseKey { get; set; } = Keys.P;
+        [Menu("Auto-Click Delay (ms)")] public RangeNode<int> AutoClickDelayMs { get; set; } = new RangeNode<int>(200, 0, 2000);
+        
         //=== GENERAL SETTINGS ===
         [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);
         [Menu("Aim Loop Delay")] public RangeNode<int> AimLoopDelay { get; set; } = new RangeNode<int>(124, 1, 200);

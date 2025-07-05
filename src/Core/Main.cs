@@ -47,6 +47,11 @@ namespace Aimbot.Core
         // Debug file logging
         private string _debugLogPath = "";
         private readonly object _debugLogLock = new object();
+        
+        // Pause/override functionality
+        private bool _automaticTargetingPaused = false;
+        private bool _pauseKeyWasPressed = false;
+        private DateTime _lastTargetTime = DateTime.MinValue;
 
         public string[] LightlessGrub =
         {
@@ -125,6 +130,9 @@ namespace Aimbot.Core
                 
                 WeightDebug();
                 
+                // Handle pause key for automatic targeting
+                HandlePauseKey();
+                
                 // Render ignored monsters editor if enabled
                 if (Settings.ShowIgnoredMonstersEditor.Value)
                 {
@@ -152,9 +160,17 @@ namespace Aimbot.Core
                 
                 if (Settings.AutomaticTargeting.Value && !uiOpen)
                 {
-                    // Automatic mode: aim when enemies are in range
-                    shouldAim = HasTargetsInRange();
-                    aimReason = shouldAim ? "Automatic targeting (enemies in range)" : "Automatic targeting (no valid targets)";
+                    // Automatic mode: aim when enemies are in range, but respect pause state
+                    if (_automaticTargetingPaused)
+                    {
+                        shouldAim = false;
+                        aimReason = "Automatic targeting PAUSED";
+                    }
+                    else
+                    {
+                        shouldAim = HasTargetsInRange();
+                        aimReason = shouldAim ? "Automatic targeting (enemies in range)" : "Automatic targeting (no valid targets)";
+                    }
                 }
                 else if (!Settings.AutomaticTargeting.Value && !uiOpen)
                 {
@@ -173,7 +189,28 @@ namespace Aimbot.Core
                 if (Settings.DetailedDebugLogging.Value && _aimTimer.ElapsedMilliseconds % 2000 < 50) // Log every 2 seconds (with 50ms window)
                 {
                     string mode = Settings.AutomaticTargeting.Value ? "Automatic" : "Manual";
-                    LogMessage($"Mode: {mode}, UI Open: {uiOpen}, Should Aim: {shouldAim}, Currently Aiming: {_aiming}", 1);
+                    string pauseStatus = _automaticTargetingPaused ? " (PAUSED)" : "";
+                    LogMessage($"Mode: {mode}{pauseStatus}, UI Open: {uiOpen}, Should Aim: {shouldAim}, Currently Aiming: {_aiming}", 1);
+                }
+                
+                // Show pause status prominently when paused (even without debug mode)
+                if (_automaticTargetingPaused && Settings.AutomaticTargeting.Value)
+                {
+                    Graphics.DrawText($"AUTOMATIC TARGETING PAUSED", new Vector2(10, 30), Color.Red, 16);
+                    Graphics.DrawText($"Press {Settings.PauseKey.Value} to resume", new Vector2(10, 50), Color.Yellow, 12);
+                }
+                
+                // Show auto-click delay countdown when enabled and delay is active
+                if (Settings.AutomaticTargeting.Value && !_automaticTargetingPaused && Settings.AutoClickDelayMs.Value > 0)
+                {
+                    var timeSinceLastTarget = DateTime.Now - _lastTargetTime;
+                    var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelayMs.Value);
+                    var remaining = requiredDelay - timeSinceLastTarget;
+                    
+                    if (remaining.TotalMilliseconds > 0 && _lastTargetTime != DateTime.MinValue)
+                    {
+                        Graphics.DrawText($"Auto-click in: {remaining.TotalMilliseconds:F0}ms", new Vector2(10, 70), Color.Orange, 12);
+                    }
                 }
                 
                 if (shouldAim)
@@ -240,11 +277,40 @@ namespace Aimbot.Core
             }
         }
 
+        private void HandlePauseKey()
+        {
+            try
+            {
+                bool pauseKeyPressed = Keyboard.IsKeyDown((int)Settings.PauseKey.Value);
+                
+                // Toggle pause state on key press (not hold)
+                if (pauseKeyPressed && !_pauseKeyWasPressed)
+                {
+                    _automaticTargetingPaused = !_automaticTargetingPaused;
+                    string status = _automaticTargetingPaused ? "PAUSED" : "RESUMED";
+                    LogMessage($"Automatic targeting {status} (Press {Settings.PauseKey.Value} to toggle)", 2);
+                }
+                
+                _pauseKeyWasPressed = pauseKeyPressed;
+            }
+            catch (Exception e)
+            {
+                LogError($"Error handling pause key: {e.Message}", 5);
+            }
+        }
+
         private void WeightDebug()
         {
             try
             {
                 if (!Settings.DebugMonsterWeight.Value) return;
+                
+                // Show pause status when debug is enabled
+                if (_automaticTargetingPaused && Settings.AutomaticTargeting.Value)
+                {
+                    Graphics.DrawText($"AUTOMATIC TARGETING PAUSED", new Vector2(10, 50), Color.Red, 16);
+                    Graphics.DrawText($"Press {Settings.PauseKey.Value} to resume", new Vector2(10, 70), Color.Yellow, 12);
+                }
                 
                 // Add null checks
                 if (GameController?.Entities == null || GameController?.Player == null)
@@ -973,6 +1039,27 @@ namespace Aimbot.Core
                     LogMessage("Manual mode active - auto-click is disabled, expecting manual click", 1);
                     return;
                 }
+                
+                // Check if we're paused
+                if (_automaticTargetingPaused)
+                {
+                    LogMessage("Auto-click cancelled - targeting is paused", 1);
+                    return;
+                }
+                
+                // Apply delay before auto-clicking to give user time to react
+                var timeSinceLastTarget = DateTime.Now - _lastTargetTime;
+                var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelayMs.Value);
+                
+                if (timeSinceLastTarget < requiredDelay)
+                {
+                    var remaining = (requiredDelay - timeSinceLastTarget).TotalMilliseconds;
+                    LogMessage($"Auto-click delayed - waiting {remaining:F0}ms more", 1);
+                    return;
+                }
+                
+                // Record this targeting time
+                _lastTargetTime = DateTime.Now;
                 
                 string buttonName = Settings.AutoClickButton.Value switch
                 {

@@ -78,6 +78,17 @@
 - "Clear Debug Log" button resets the file when it gets too large
 - Monster paths can be easily copied from the log file into the ignored monsters editor
 
+### 11. Pause System and Auto-Click Delay (NEW)
+**Problem**: Users needed a way to pause automatic targeting when monsters are behind walls or inaccessible.
+**Fix**: Added comprehensive pause and delay system:
+- New "Pause Automatic Targeting Key" setting (default: P key) to instantly pause/resume automatic targeting
+- New "Auto-Click Delay (ms)" setting (default: 200ms) creates a delay before auto-clicking, giving time to react
+- Visual feedback shows "AUTOMATIC TARGETING PAUSED" on screen when paused
+- Countdown timer shows remaining delay time before next auto-click
+- Pause works by toggle - press once to pause, press again to resume
+- Delay prevents rapid-fire clicking and allows user intervention
+- Works only in automatic targeting mode - manual mode is unaffected
+
 ## Testing Steps
 
 ### Step 1: Choose Your Mode
@@ -93,11 +104,13 @@
 2. The plugin will use the manual "Aim Key" (default: 'A')
 3. You'll need to hold the key down to aim, and click manually
 
-### Step 2: Enable Debug Mode
+### Step 2: Configure Settings
 1. Enable "Debug Monster Weight" to see entity counts on screen
 2. **Optionally** enable "Detailed Debug Logging" for verbose technical information
 3. Enable "Show Aim Range" to see the green targeting circle
 4. **Optionally** enable "Log Monsters to File" to capture monster paths for easy reference
+5. Configure "Pause Automatic Targeting Key" (default: P key) for quick pause/resume
+6. Adjust "Auto-Click Delay (ms)" for wall/obstacle reaction time (default: 200ms)
 
 ### Step 3: Test Automatic Targeting Mode
 1. Stand near monsters with "Automatic Targeting" enabled
@@ -142,7 +155,20 @@
    - "Reload from File" to refresh from external changes
 6. Changes are automatically saved to "Ignored Monsters.txt"
 
-### Step 8: Test Debug File Logging (Optional)
+### Step 8: Test Pause System (Important)
+1. Enable "Automatic Targeting" mode
+2. Go near monsters and let the plugin start targeting
+3. When you see a monster behind a wall or inaccessible area being targeted:
+   - **Quickly press P key** (or your configured pause key) to pause
+   - You should see "AUTOMATIC TARGETING PAUSED" appear on screen
+   - The plugin will stop aiming and clicking immediately
+4. Move to a better position or wait for accessible monsters
+5. **Press P key again** to resume automatic targeting
+6. Test the "Auto-Click Delay" by setting it to 1000ms (1 second):
+   - You should see "Auto-click in: XXXms" countdown on screen
+   - This gives you time to react before the click happens
+
+### Step 9: Test Debug File Logging (Optional)
 1. Enable "Log Monsters to File" in plugin settings
 2. Go near monsters and let the plugin target them
 3. In the ignored monsters editor, click "Open Debug Log"
@@ -153,7 +179,7 @@
 5. Copy monster paths from the log into the "Add New Monster Path" field
 6. Use "Clear Debug Log" when the file gets too large
 
-### Step 9: Debug Issues
+### Step 10: Debug Issues
 1. Check log messages for mode confirmation:
    - "Mode: Automatic" or "Mode: Manual"
    - "Should Aim: True/False"
@@ -254,6 +280,29 @@
 - Mouse state is reset to prevent getting stuck
 - Plugin continues to function after encountering problems
 - Check logs for error details if issues persist
+
+### Issue: Can't react fast enough to pause when targeting monsters behind walls
+**Solution**: Increase "Auto-Click Delay (ms)" to give yourself more time (try 500-1000ms)
+**Solution**: Practice using the pause key quickly when you see unwanted targeting
+**Tip**: The pause key works instantly - you don't need to hold it, just tap it
+
+### Issue: Pause key not working
+**Check**: Make sure you're in "Automatic Targeting" mode (pause only works in automatic mode)
+**Check**: Verify the pause key is set correctly in settings (default: P)
+**Check**: Make sure you're tapping the key, not holding it (it's a toggle)
+**Debug**: Look for "Automatic targeting PAUSED/RESUMED" messages in logs
+
+### Issue: Auto-click delay too slow/fast
+**Solution**: Adjust "Auto-Click Delay (ms)" setting:
+- 0ms = Instant clicking (no delay)
+- 200ms = Default, good for most situations
+- 500-1000ms = Longer delay for careful play
+- 2000ms = Maximum delay for very cautious targeting
+
+### Issue: Want to disable pause system entirely
+**Solution**: Set "Auto-Click Delay (ms)" to 0 for instant clicking
+**Solution**: Avoid using the pause key and it won't interfere
+**Note**: The pause system only activates when you press the pause key
 
 ## Debug Log Examples
 

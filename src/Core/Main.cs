@@ -86,20 +86,43 @@ namespace Aimbot.Core
 
         public override void Render()
         {
-            base.Render();
-            WeightDebug();
-            if (Settings.ShowAimRange.Value)
-            {
-                Vector3 pos = GameController.Player.GetComponent<Render>().Pos;
-                DrawEllipseToWorld(pos, Settings.AimRange.Value, 25, 2, Color.LawnGreen);
-            }
-
             try
             {
+                base.Render();
+                
+                // Add null checks for critical components
+                if (GameController?.Player == null)
+                {
+                    return; // Player not available yet
+                }
+                
+                if (GameController.Game?.IngameState?.IngameUi == null)
+                {
+                    return; // Game UI not available yet
+                }
+                
+                if (Settings == null)
+                {
+                    LogError("Settings is null in Render method", 5);
+                    return;
+                }
+                
+                WeightDebug();
+                
+                if (Settings.ShowAimRange.Value)
+                {
+                    var playerRender = GameController.Player.GetComponent<Render>();
+                    if (playerRender != null)
+                    {
+                        Vector3 pos = playerRender.Pos;
+                        DrawEllipseToWorld(pos, Settings.AimRange.Value, 25, 2, Color.LawnGreen);
+                    }
+                }
+
                 // Check if key is currently pressed
                 bool keyPressed = Keyboard.IsKeyDown((int) Settings.AimKey.Value);
-                bool inventoryOpen = GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible;
-                bool leftPanelOpen = GameController.Game.IngameState.IngameUi.OpenLeftPanel.IsVisible;
+                bool inventoryOpen = GameController.Game.IngameState.IngameUi.InventoryPanel?.IsVisible ?? false;
+                bool leftPanelOpen = GameController.Game.IngameState.IngameUi.OpenLeftPanel?.IsVisible ?? false;
                 
                 // Add periodic debugging info only if detailed logging is enabled
                 if (Settings.DetailedDebugLogging.Value && _aimTimer.ElapsedMilliseconds % 2000 < 50) // Log every 2 seconds (with 50ms window)
@@ -159,37 +182,57 @@ namespace Aimbot.Core
             catch (Exception e)
             {
                 LogError("Something went wrong in Render: " + e.Message, 5);
-                if (Settings.DetailedDebugLogging.Value)
+                if (Settings?.DetailedDebugLogging?.Value == true)
                 {
                     LogError("Stack trace: " + e.StackTrace, 5);
                 }
+                // Reset aiming state to prevent plugin from getting stuck
+                _aiming = false;
+                _mouseWasHeldDown = false;
             }
         }
 
         private void WeightDebug()
         {
-            if (!Settings.DebugMonsterWeight.Value) return;
-            
-            // Add basic entity detection debug
-            var totalEntities = GameController.Entities.Count();
-            var monstersInRange = GameController.Entities.Where(x => x.HasComponent<Monster>() && x.IsAlive).Count();
-            var playersInRange = GameController.Entities.Where(x => x.HasComponent<Player>() && x.IsAlive).Count();
-            
-            // Display debug info on screen
-            var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}";
-            Graphics.DrawText(debugText, new Vector2(10, 100), Color.Yellow, 12);
-            
-            foreach (Entity entity in GameController.Entities)
+            try
             {
-                var distance = Vector3.Distance(GameController.Player.Pos, entity.Pos);
-                if (distance < Settings.AimRange.Value && entity.HasComponent<Monster>() && entity.IsAlive)
+                if (!Settings.DebugMonsterWeight.Value) return;
+                
+                // Add null checks
+                if (GameController?.Entities == null || GameController?.Player == null)
                 {
-                    Camera camera = GameController.Game.IngameState.Camera;
-                    Vector2 chestScreenCoords = camera.WorldToScreen(entity.Pos.Translate(0, 0, -170));
-                    if (chestScreenCoords == new Vector2()) continue;
-                    Vector2 iconRect = new Vector2(chestScreenCoords.X, chestScreenCoords.Y);
-                    Graphics.DrawText(AimWeightEB(entity).ToString(), iconRect, Color.White, 15);
+                    return;
                 }
+                
+                // Add basic entity detection debug
+                var totalEntities = GameController.Entities.Count();
+                var monstersInRange = GameController.Entities.Where(x => x?.HasComponent<Monster>() == true && x.IsAlive).Count();
+                var playersInRange = GameController.Entities.Where(x => x?.HasComponent<Player>() == true && x.IsAlive).Count();
+                
+                // Display debug info on screen
+                var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}";
+                Graphics.DrawText(debugText, new Vector2(10, 100), Color.Yellow, 12);
+                
+                foreach (Entity entity in GameController.Entities)
+                {
+                    if (entity == null || !entity.IsValid) continue;
+                    
+                    var distance = Vector3.Distance(GameController.Player.Pos, entity.Pos);
+                    if (distance < Settings.AimRange.Value && entity.HasComponent<Monster>() && entity.IsAlive)
+                    {
+                        Camera camera = GameController.Game?.IngameState?.Camera;
+                        if (camera == null) continue;
+                        
+                        Vector2 chestScreenCoords = camera.WorldToScreen(entity.Pos.Translate(0, 0, -170));
+                        if (chestScreenCoords == new Vector2()) continue;
+                        Vector2 iconRect = new Vector2(chestScreenCoords.X, chestScreenCoords.Y);
+                        Graphics.DrawText(AimWeightEB(entity).ToString(), iconRect, Color.White, 15);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                LogError($"Error in WeightDebug: {e.Message}", 3);
             }
         }
 
@@ -255,67 +298,98 @@ namespace Aimbot.Core
 
         private bool IsInvulnerable(Entity entity)
         {
-            if (!entity.HasComponent<Life>()) return true; // No life component = invulnerable
-            
-            var life = entity.GetComponent<Life>();
-            
-            // Check if health is at 0 or invalid
-            if (life.CurHP <= 0) return true;
-            
-            // Check for invulnerability stats
-            if (TryGetStat("cannot_be_damaged", entity) > 0) return true;
-            if (TryGetStat("cannot_die", entity) > 0) return true;
-            if (TryGetStat("immune_to_damage", entity) > 0) return true;
-            
-            // Check for common invulnerability buffs
-            if (HasAnyBuff(entity, new[]
+            try
             {
-                "invulnerable",
-                "immune_to_damage",
-                "cannot_be_damaged",
-                "phase_run",
-                "grace_period",
-                "immune",
-                "invulnerable_to_damage",
-                "cannot_take_damage"
-            }))
-            {
-                return true;
+                if (entity == null || !entity.IsValid) return true; // Invalid entity = invulnerable
+                
+                if (!entity.HasComponent<Life>()) return true; // No life component = invulnerable
+                
+                var life = entity.GetComponent<Life>();
+                if (life == null) return true; // Failed to get life component
+                
+                // Check if health is at 0 or invalid
+                if (life.CurHP <= 0) return true;
+                
+                // Check for invulnerability stats
+                if (TryGetStat("cannot_be_damaged", entity) > 0) return true;
+                if (TryGetStat("cannot_die", entity) > 0) return true;
+                if (TryGetStat("immune_to_damage", entity) > 0) return true;
+                
+                // Check for common invulnerability buffs
+                if (HasAnyBuff(entity, new[]
+                {
+                    "invulnerable",
+                    "immune_to_damage",
+                    "cannot_be_damaged",
+                    "phase_run",
+                    "grace_period",
+                    "immune",
+                    "invulnerable_to_damage",
+                    "cannot_take_damage"
+                }))
+                {
+                    return true;
+                }
+                
+                // Check for specific invulnerability conditions
+                // Some monsters become invulnerable when transitioning phases
+                if (entity.Path != null && (entity.Path.Contains("BossTransition") || entity.Path.Contains("Invulnerable")))
+                {
+                    return true;
+                }
+                
+                return false;
             }
-            
-            // Check for specific invulnerability conditions
-            // Some monsters become invulnerable when transitioning phases
-            if (entity.Path.Contains("BossTransition") || entity.Path.Contains("Invulnerable"))
+            catch (Exception e)
             {
-                return true;
+                LogError($"Error in IsInvulnerable: {e.Message}", 3);
+                return true; // Assume invulnerable if we can't determine
             }
-            
-            return false;
         }
 
         private void Aimbot()
         {
-            if (_aimTimer.ElapsedMilliseconds < Settings.AimLoopDelay.Value)
+            try
             {
+                if (Settings == null)
+                {
+                    LogError("Settings is null in Aimbot method", 5);
+                    _aiming = false;
+                    return;
+                }
+                
+                if (_aimTimer.ElapsedMilliseconds < Settings.AimLoopDelay.Value)
+                {
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Timer not ready: {_aimTimer.ElapsedMilliseconds}ms < {Settings.AimLoopDelay.Value}ms", 1);
+                    }
+                    _aiming = false;
+                    return;
+                }
+
                 if (Settings.DetailedDebugLogging.Value)
                 {
-                    LogMessage($"Timer not ready: {_aimTimer.ElapsedMilliseconds}ms < {Settings.AimLoopDelay.Value}ms", 1);
+                    LogMessage($"Aimbot running - AimPlayers: {Settings.AimPlayers.Value}", 1);
                 }
+                
+                if (Settings.AimPlayers.Value)
+                    PlayerAim();
+                else
+                    MonsterAim();
+                    
+                _aimTimer.Restart();
                 _aiming = false;
-                return;
             }
-
-            if (Settings.DetailedDebugLogging.Value)
+            catch (Exception e)
             {
-                LogMessage($"Aimbot running - AimPlayers: {Settings.AimPlayers.Value}", 1);
+                LogError($"Error in Aimbot: {e.Message}", 5);
+                if (Settings?.DetailedDebugLogging?.Value == true)
+                {
+                    LogError($"Aimbot stack trace: {e.StackTrace}", 5);
+                }
+                _aiming = false; // Reset aiming state on error
             }
-            
-            if (Settings.AimPlayers.Value)
-                PlayerAim();
-            else
-                MonsterAim();
-            _aimTimer.Restart();
-            _aiming = false;
         }
 
 
@@ -455,216 +529,294 @@ namespace Aimbot.Core
 
         private void MonsterAim()
         {
-            // Get entities from GameController instead of the potentially stale _entities list
-            var validEntities = GameController.Entities.Where(x => x.HasComponent<Monster>()
-                                                                    && x.IsAlive
-                                                                    && x.IsHostile
-                                                                    && !IsIgnoredMonster(x.Path)
-                                                                    && TryGetStat("ignored_by_enemy_target_selection", x) == 0
-                                                                    && TryGetStat("cannot_die", x) == 0
-                                                                    && TryGetStat("cannot_be_damaged", x) == 0
-                                                                    && !IsInvulnerable(x) // Check for invulnerability
-                                                                    && !HasAnyBuff(x, new[]
-                                                                       {
-                                                                               "capture_monster_captured",
-                                                                               "capture_monster_disappearing"
-                                                                       }))
-                                                           .ToList();
-
-            if (Settings.DetailedDebugLogging.Value)
+            try
             {
-                LogMessage($"MonsterAim: Found {validEntities.Count} valid entities before distance check", 1);
-            }
-
-            // Filter by distance using GameController.Player.Pos directly
-            var entitiesInRange = validEntities.Where(x => 
-            {
-                var distance = Vector3.Distance(GameController.Player.Pos, x.Pos);
-                return distance <= Settings.AimRange.Value;
-            }).ToList();
-
-            if (Settings.DetailedDebugLogging.Value)
-            {
-                LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
-            }
-
-            if (!entitiesInRange.Any())
-            {
-                if (Settings.DetailedDebugLogging.Value)
+                // Add null checks for critical components
+                if (GameController?.Entities == null || GameController?.Player == null)
                 {
-                    LogMessage("No monsters found within range", 1);
-                }
-                return;
-            }
-
-            // Create list with weights and sort by highest weight
-            var aliveAndHostile = entitiesInRange
-                .Select(x => new Tuple<float, Entity>(AimWeightEB(x), x))
-                .OrderByDescending(x => x.Item1) // Sort by weight (highest first)
-                .ToList();
-
-            if (Settings.DetailedDebugLogging.Value)
-            {
-                LogMessage($"MonsterAim: Sorted {aliveAndHostile.Count} targets by weight", 1);
-            }
-
-            if (aliveAndHostile.Any())
-            {
-                Tuple<float, Entity> HeightestWeightedTarget = aliveAndHostile.First(); // Take the highest weighted target
-                var distance = Vector3.Distance(GameController.Player.Pos, HeightestWeightedTarget.Item2.Pos);
-                
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Targeting monster with weight: {HeightestWeightedTarget.Item1:F1}, distance: {distance:F1}, path: {HeightestWeightedTarget.Item2.Path}", 1);
+                    LogMessage("GameController or Player is null, skipping MonsterAim", 1);
+                    return;
                 }
                 
-                if (!_mouseWasHeldDown)
+                if (GameController.Game?.IngameState?.Camera == null)
                 {
-                    _oldMousePos = Mouse.GetCursorPositionVector();
-                    _mouseWasHeldDown = true;
-                    if (Settings.DetailedDebugLogging.Value)
+                    LogMessage("Camera is null, skipping MonsterAim", 1);
+                    return;
+                }
+                
+                // Get entities from GameController instead of the potentially stale _entities list
+                var validEntities = GameController.Entities.Where(x => x != null 
+                                                                        && x.IsValid
+                                                                        && x.HasComponent<Monster>()
+                                                                        && x.IsAlive
+                                                                        && x.IsHostile
+                                                                        && !IsIgnoredMonster(x.Path)
+                                                                        && TryGetStat("ignored_by_enemy_target_selection", x) == 0
+                                                                        && TryGetStat("cannot_die", x) == 0
+                                                                        && TryGetStat("cannot_be_damaged", x) == 0
+                                                                        && !IsInvulnerable(x) // Check for invulnerability
+                                                                        && !HasAnyBuff(x, new[]
+                                                                           {
+                                                                                   "capture_monster_captured",
+                                                                                   "capture_monster_disappearing"
+                                                                           }))
+                                                               .ToList();
+
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"MonsterAim: Found {validEntities.Count} valid entities before distance check", 1);
+                }
+
+                // Filter by distance using GameController.Player.Pos directly
+                var entitiesInRange = validEntities.Where(x => 
+                {
+                    try
                     {
-                        LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                        var distance = Vector3.Distance(GameController.Player.Pos, x.Pos);
+                        return distance <= Settings.AimRange.Value;
                     }
+                    catch
+                    {
+                        return false; // Skip entities that cause distance calculation errors
+                    }
+                }).ToList();
+
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
                 }
 
-                Camera camera = GameController.Game.IngameState.Camera;
-                Vector2 entityPosToScreen = camera.WorldToScreen(HeightestWeightedTarget.Item2.Pos.Translate(0, 0, 0));
-                
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
-                    LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
-                }
-                
-                RectangleF vectWindow = GameController.Window.GetWindowRectangle();
-                
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
-                }
-                
-                // Check if target is on screen
-                if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
+                if (!entitiesInRange.Any())
                 {
                     if (Settings.DetailedDebugLogging.Value)
                     {
-                        LogMessage("Target off screen vertically", 1);
+                        LogMessage("No monsters found within range", 1);
                     }
-                    _aiming = false;
                     return;
                 }
 
-                if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
+                // Create list with weights and sort by highest weight
+                var aliveAndHostile = entitiesInRange
+                    .Select(x => 
+                    {
+                        try
+                        {
+                            return new Tuple<float, Entity>(AimWeightEB(x), x);
+                        }
+                        catch
+                        {
+                            return new Tuple<float, Entity>(0, x); // Assign 0 weight if calculation fails
+                        }
+                    })
+                    .Where(x => x != null && x.Item2 != null)
+                    .OrderByDescending(x => x.Item1) // Sort by weight (highest first)
+                    .ToList();
+
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"MonsterAim: Sorted {aliveAndHostile.Count} targets by weight", 1);
+                }
+
+                if (aliveAndHostile.Any())
+                {
+                    Tuple<float, Entity> HeightestWeightedTarget = aliveAndHostile.First(); // Take the highest weighted target
+                    var distance = Vector3.Distance(GameController.Player.Pos, HeightestWeightedTarget.Item2.Pos);
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Targeting monster with weight: {HeightestWeightedTarget.Item1:F1}, distance: {distance:F1}, path: {HeightestWeightedTarget.Item2.Path}", 1);
+                    }
+                    
+                    if (!_mouseWasHeldDown)
+                    {
+                        _oldMousePos = Mouse.GetCursorPositionVector();
+                        _mouseWasHeldDown = true;
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage($"Stored old mouse position: {_oldMousePos.X:F1}, {_oldMousePos.Y:F1}", 1);
+                        }
+                    }
+
+                    Camera camera = GameController.Game.IngameState.Camera;
+                    Vector2 entityPosToScreen = camera.WorldToScreen(HeightestWeightedTarget.Item2.Pos.Translate(0, 0, 0));
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Entity world pos: {HeightestWeightedTarget.Item2.Pos.X:F1}, {HeightestWeightedTarget.Item2.Pos.Y:F1}", 1);
+                        LogMessage($"Entity screen pos: {entityPosToScreen.X:F1}, {entityPosToScreen.Y:F1}", 1);
+                    }
+                    
+                    RectangleF vectWindow = GameController.Window.GetWindowRectangle();
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Window bounds: {vectWindow.Left:F1}, {vectWindow.Top:F1}, {vectWindow.Right:F1}, {vectWindow.Bottom:F1}", 1);
+                    }
+                    
+                    // Check if target is on screen
+                    if (entityPosToScreen.Y + PixelBorder > vectWindow.Bottom || entityPosToScreen.Y - PixelBorder < vectWindow.Top)
+                    {
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Target off screen vertically", 1);
+                        }
+                        _aiming = false;
+                        return;
+                    }
+
+                    if (entityPosToScreen.X + PixelBorder > vectWindow.Right || entityPosToScreen.X - PixelBorder < vectWindow.Left)
+                    {
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Target off screen horizontally", 1);
+                        }
+                        _aiming = false;
+                        return;
+                    }
+
+                    // Calculate final mouse position
+                    _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
+                    Vector2 finalMousePos = entityPosToScreen + _clickWindowOffset;
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
+                        LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
+                    }
+                    
+                    // Use smooth human-like movement
+                    Mouse.SetCursorPosition(finalMousePos);
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Mouse movement executed", 1);
+                    }
+                    
+                    // Perform auto-click if enabled
+                    LogMessage("About to call PerformAutoClick", 1);
+                    PerformAutoClick();
+                    LogMessage("PerformAutoClick call completed", 1);
+                }
+                else
                 {
                     if (Settings.DetailedDebugLogging.Value)
                     {
-                        LogMessage("Target off screen horizontally", 1);
+                        LogMessage("No valid targets after sorting", 1);
                     }
-                    _aiming = false;
-                    return;
                 }
-
-                // Calculate final mouse position
-                _clickWindowOffset = GameController.Window.GetWindowRectangle().TopLeft;
-                Vector2 finalMousePos = entityPosToScreen + _clickWindowOffset;
-                
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage($"Window offset: {_clickWindowOffset.X:F1}, {_clickWindowOffset.Y:F1}", 1);
-                    LogMessage($"Final mouse position: {finalMousePos.X:F1}, {finalMousePos.Y:F1}", 1);
-                }
-                
-                // Use smooth human-like movement
-                Mouse.SetCursorPosition(finalMousePos);
-                
-                if (Settings.DetailedDebugLogging.Value)
-                {
-                    LogMessage("Mouse movement executed", 1);
-                }
-                
-                // Perform auto-click if enabled
-                LogMessage("About to call PerformAutoClick", 1);
-                PerformAutoClick();
-                LogMessage("PerformAutoClick call completed", 1);
             }
-            else
+            catch (Exception e)
             {
-                if (Settings.DetailedDebugLogging.Value)
+                LogError($"Error in MonsterAim: {e.Message}", 5);
+                if (Settings?.DetailedDebugLogging?.Value == true)
                 {
-                    LogMessage("No valid targets after sorting", 1);
+                    LogError($"MonsterAim stack trace: {e.StackTrace}", 5);
                 }
+                _aiming = false; // Reset aiming state on error
             }
         }
 
         public float AimWeightEB(Entity entity)
         {
-            Entity m = entity;
-            int weight = 0;
-            
-            // Use direct distance calculation instead of Misc.EntityDistance which might fail
-            var distance = Vector3.Distance(GameController.Player.Pos, m.Pos);
-            weight -= (int)(distance / 10);
-            
-            MonsterRarity rarity = m.GetComponent<ObjectMagicProperties>().Rarity;
-            List<string> monsterMagicProperties = new List<string>();
-            if (m.HasComponent<ObjectMagicProperties>()) monsterMagicProperties = m.GetComponent<ObjectMagicProperties>().Mods;
-            List<Buff> monsterBuffs = new List<Buff>();
-            // Note: Buffs property doesn't exist in ExileCore Life component - disabling buff checks for now
-            // if (m.HasComponent<Life>()) monsterBuffs = m.GetComponent<Life>().Buffs;
-            if (HasAnyMagicAttribute(monsterMagicProperties, new[]
+            try
             {
-                    "AuraCannotDie"
-            }, true))
-                weight += Settings.CannotDieAura.Value;
-            // Note: HasBuff method doesn't exist - using HasAnyBuff helper instead
-            // if (m.GetComponent<Life>().HasBuff("capture_monster_trapped")) weight += Settings.capture_monster_trapped.Value;
-            // if (m.GetComponent<Life>().HasBuff("harbinger_minion_new")) weight += Settings.HarbingerMinionWeight.Value;
-            // if (m.GetComponent<Life>().HasBuff("capture_monster_enraged")) weight += Settings.capture_monster_enraged.Value;
-            if (m.Path.Contains("/BeastHeart")) weight += Settings.BeastHearts.Value;
-            if (m.Path == "Metadata/Monsters/Tukohama/TukohamaShieldTotem") weight += Settings.TukohamaShieldTotem.Value;
-            if (HasAnyMagicAttribute(monsterMagicProperties, new[]
-            {
-                    "MonsterRaisesUndeadText"
-            }))
-            {
-                weight += Settings.RaisesUndead.Value;
-            }
+                if (entity == null || !entity.IsValid) return 0;
+                
+                Entity m = entity;
+                int weight = 0;
+                
+                // Use direct distance calculation instead of Misc.EntityDistance which might fail
+                if (GameController?.Player != null)
+                {
+                    var distance = Vector3.Distance(GameController.Player.Pos, m.Pos);
+                    weight -= (int)(distance / 10);
+                }
+                
+                if (!m.HasComponent<ObjectMagicProperties>()) return weight; // Exit early if no magic properties
+                
+                var magicProperties = m.GetComponent<ObjectMagicProperties>();
+                if (magicProperties == null) return weight;
+                
+                MonsterRarity rarity = magicProperties.Rarity;
+                List<string> monsterMagicProperties = new List<string>();
+                if (magicProperties.Mods != null)
+                {
+                    monsterMagicProperties = magicProperties.Mods;
+                }
+                
+                List<Buff> monsterBuffs = new List<Buff>();
+                // Note: Buffs property doesn't exist in ExileCore Life component - disabling buff checks for now
+                // if (m.HasComponent<Life>()) monsterBuffs = m.GetComponent<Life>().Buffs;
+                
+                if (HasAnyMagicAttribute(monsterMagicProperties, new[]
+                {
+                        "AuraCannotDie"
+                }, true))
+                    weight += Settings.CannotDieAura.Value;
+                
+                // Note: HasBuff method doesn't exist - using HasAnyBuff helper instead
+                // if (m.GetComponent<Life>().HasBuff("capture_monster_trapped")) weight += Settings.capture_monster_trapped.Value;
+                // if (m.GetComponent<Life>().HasBuff("harbinger_minion_new")) weight += Settings.HarbingerMinionWeight.Value;
+                // if (m.GetComponent<Life>().HasBuff("capture_monster_enraged")) weight += Settings.capture_monster_enraged.Value;
+                
+                if (m.Path != null)
+                {
+                    if (m.Path.Contains("/BeastHeart")) weight += Settings.BeastHearts.Value;
+                    if (m.Path == "Metadata/Monsters/Tukohama/TukohamaShieldTotem") weight += Settings.TukohamaShieldTotem.Value;
+                    
+                    // Check for Breach monsters using path instead of custom component
+                    if (m.Path.Contains("Breach") || m.Path.Contains("breach")) weight += Settings.BreachMonsterWeight.Value;
+                    if (SummonedSkeleton.Any(path => m.Path == path)) weight += Settings.SummonedSkeleton.Value;
+                    if (RaisedZombie.Any(path => m.Path == path)) weight += Settings.RaisedZombie.Value;
+                    if (LightlessGrub.Any(path => m.Path == path)) weight += Settings.LightlessGrub.Value;
+                    if (m.Path.Contains("TaniwhaTail")) weight += Settings.TaniwhaTail.Value;
+                }
+                
+                if (HasAnyMagicAttribute(monsterMagicProperties, new[]
+                {
+                        "MonsterRaisesUndeadText"
+                }))
+                {
+                    weight += Settings.RaisesUndead.Value;
+                }
 
-            // Experimental, seems like a buff only strongbox monsters get
-            if (HasAnyBuff(monsterBuffs, new[]
-            {
-                    "summoned_monster_epk_buff"
-            }))
-            {
-                weight += Settings.StrongBoxMonster.Value;
-            }
-            switch (rarity)
-            {
-                case MonsterRarity.Unique:
-                    weight += Settings.UniqueRarityWeight.Value;
-                    break;
-                case MonsterRarity.Rare:
-                    weight += Settings.RareRarityWeight.Value;
-                    break;
-                case MonsterRarity.Magic:
-                    weight += Settings.MagicRarityWeight.Value;
-                    break;
-                case MonsterRarity.White:
-                    weight += Settings.NormalRarityWeight.Value;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                // Experimental, seems like a buff only strongbox monsters get
+                if (HasAnyBuff(monsterBuffs, new[]
+                {
+                        "summoned_monster_epk_buff"
+                }))
+                {
+                    weight += Settings.StrongBoxMonster.Value;
+                }
+                
+                switch (rarity)
+                {
+                    case MonsterRarity.Unique:
+                        weight += Settings.UniqueRarityWeight.Value;
+                        break;
+                    case MonsterRarity.Rare:
+                        weight += Settings.RareRarityWeight.Value;
+                        break;
+                    case MonsterRarity.Magic:
+                        weight += Settings.MagicRarityWeight.Value;
+                        break;
+                    case MonsterRarity.White:
+                        weight += Settings.NormalRarityWeight.Value;
+                        break;
+                    default:
+                        // Just use default weight for unknown rarities
+                        break;
+                }
 
-            // Check for Breach monsters using path instead of custom component
-            if (m.Path.Contains("Breach") || m.Path.Contains("breach")) weight += Settings.BreachMonsterWeight.Value;
-            if (m.HasComponent<DiesAfterTime>()) weight += Settings.DiesAfterTime.Value;
-            if (SummonedSkeleton.Any(path => m.Path == path)) weight += Settings.SummonedSkeleton.Value;
-            if (RaisedZombie.Any(path => m.Path == path)) weight += Settings.RaisedZombie.Value;
-            if (LightlessGrub.Any(path => m.Path == path)) weight += Settings.LightlessGrub.Value;
-            if (m.Path.Contains("TaniwhaTail")) weight += Settings.TaniwhaTail.Value;
-            return weight;
+                if (m.HasComponent<DiesAfterTime>()) weight += Settings.DiesAfterTime.Value;
+                
+                return weight;
+            }
+            catch (Exception e)
+            {
+                LogError($"Error in AimWeightEB: {e.Message}", 3);
+                return 0; // Return 0 weight if calculation fails
+            }
         }
 
         private void PerformAutoClick()

@@ -46,6 +46,15 @@
 - Adjustable click delay for fine-tuning
 - Can be completely disabled for aim-only mode
 
+### 8. Null Reference Exception Fixes (NEW)
+**Problem**: Plugin would crash with "Object reference not set to an instance of an object" errors.
+**Fix**: Added comprehensive null checks and error handling:
+- All critical methods now have try-catch blocks
+- Null checks for GameController, Player, Entities, Camera, Settings
+- Plugin resets state and continues running instead of crashing
+- Detailed error logging to help identify issues
+- Graceful handling of invalid entities
+
 ## Testing Steps
 
 ### Step 1: Enable Debug Mode
@@ -135,6 +144,20 @@
 - Increase delay if clicks are happening too quickly after aim
 - Decrease delay if there's too much pause between aim and click
 - Default 50ms works well for most setups
+
+### Issue: Plugin crashes with null reference errors
+**Fixed**: Plugin now includes comprehensive error handling:
+- No more crashes from "Object reference not set to an instance of an object"
+- Plugin will log errors and continue running instead of stopping
+- Look for error messages in logs to identify specific issues
+- Plugin automatically resets its state when errors occur
+
+### Issue: Plugin stops working after an error
+**Fixed**: Plugin now recovers from errors automatically:
+- Aiming state is reset when errors occur
+- Mouse state is reset to prevent getting stuck
+- Plugin continues to function after encountering problems
+- Check logs for error details if issues persist
 
 ## Debug Log Examples
 

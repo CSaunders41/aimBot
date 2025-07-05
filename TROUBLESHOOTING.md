@@ -67,6 +67,17 @@
 - Detailed error logging to help identify issues
 - Graceful handling of invalid entities
 
+### 10. Debug File Logging (NEW)
+**Problem**: Debug information appeared and disappeared too quickly to read monster names/paths for the ignored monsters list.
+**Fix**: Added persistent debug file logging:
+- New "Log Monsters to File" setting writes all targeted monsters to `AimBot_Debug.log`
+- Logs monster name, path, rarity, weight, and distance for easy reference
+- Includes both detected monsters (all in range) and targeted monsters
+- Built-in log file management from ignored monsters editor
+- "Open Debug Log" button launches notepad with the log file
+- "Clear Debug Log" button resets the file when it gets too large
+- Monster paths can be easily copied from the log file into the ignored monsters editor
+
 ## Testing Steps
 
 ### Step 1: Choose Your Mode
@@ -86,6 +97,7 @@
 1. Enable "Debug Monster Weight" to see entity counts on screen
 2. **Optionally** enable "Detailed Debug Logging" for verbose technical information
 3. Enable "Show Aim Range" to see the green targeting circle
+4. **Optionally** enable "Log Monsters to File" to capture monster paths for easy reference
 
 ### Step 3: Test Automatic Targeting Mode
 1. Stand near monsters with "Automatic Targeting" enabled
@@ -130,7 +142,18 @@
    - "Reload from File" to refresh from external changes
 6. Changes are automatically saved to "Ignored Monsters.txt"
 
-### Step 8: Debug Issues
+### Step 8: Test Debug File Logging (Optional)
+1. Enable "Log Monsters to File" in plugin settings
+2. Go near monsters and let the plugin target them
+3. In the ignored monsters editor, click "Open Debug Log"
+4. Review the log file for monster information:
+   - **DETECTED** entries show all monsters found in range
+   - **TARGETING** entries show which monster was actually targeted
+   - Each entry includes monster name, path, rarity, weight, and distance
+5. Copy monster paths from the log into the "Add New Monster Path" field
+6. Use "Clear Debug Log" when the file gets too large
+
+### Step 9: Debug Issues
 1. Check log messages for mode confirmation:
    - "Mode: Automatic" or "Mode: Manual"
    - "Should Aim: True/False"
@@ -206,10 +229,12 @@
 **Note**: Changes are automatically saved to "Ignored Monsters.txt"
 
 ### Issue: Cannot find monster path to ignore
+**Solution**: Enable "Log Monsters to File" and use the debug log file to see exact monster paths
 **Solution**: Enable "Detailed Debug Logging" and watch for targeting messages
 **Solution**: Look in the game files or community resources for monster paths
 **Tip**: Monster paths usually start with "Metadata/Monsters/"
 **Example**: "Metadata/Monsters/Avatar/Avatar" for Avatar of Thunder
+**New**: Use "Open Debug Log" button in ignored monsters editor for easy path copying
 
 ### Issue: Ignored monsters editor window disappeared
 **Solution**: Re-enable "Show Ignored Monsters Editor" in plugin settings
@@ -275,6 +300,16 @@ Manual mode active - auto-click is disabled, expecting manual click
 Mode: Automatic, UI Open: False, Should Aim: False, Currently Aiming: False
 Automatic targeting (no valid targets)
 (Note: Plugin waits for enemies to come within range)
+```
+
+### Debug File Logging Examples (AimBot_Debug.log):
+```
+[2025-01-05 15:30:45.123] === SCAN: Found 8 monsters in range ===
+[2025-01-05 15:30:45.124] DETECTED - Name: 'Zombie' | Path: 'Metadata/Monsters/Zombies/Zombie' | Rarity: Normal | Weight: 5.0 | Distance: 234.5
+[2025-01-05 15:30:45.125] DETECTED - Name: 'Skeletal Warrior' | Path: 'Metadata/Monsters/Skeletons/SkeletonWarrior' | Rarity: Magic | Weight: 15.0 | Distance: 187.2
+[2025-01-05 15:30:45.126] DETECTED - Name: 'Corrupted Beast' | Path: 'Metadata/Monsters/Beast/CorruptedBeast' | Rarity: Rare | Weight: 20.0 | Distance: 156.8
+[2025-01-05 15:30:45.127] === END SCAN ===
+[2025-01-05 15:30:45.128] TARGETING - Name: 'Corrupted Beast' | Path: 'Metadata/Monsters/Beast/CorruptedBeast' | Rarity: Rare | Weight: 20.0 | Distance: 156.8
 ```
 
 ## Settings to Adjust

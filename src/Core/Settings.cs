@@ -38,6 +38,10 @@ namespace Aimbot.Core
         [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
         [Menu("Log Monsters to File")] public ToggleNode LogMonstersToFile { get; set; } = new ToggleNode(false);
         
+        //=== LINE OF SIGHT SETTINGS ===
+        [Menu("Enable Line of Sight Checking")] public ToggleNode EnableLineOfSight { get; set; } = new ToggleNode(true);
+        [Menu("Show Line of Sight Debug")] public ToggleNode ShowLineOfSightDebug { get; set; } = new ToggleNode(false);
+        
         //=== MONSTER PRIORITY WEIGHTS ===
         [Menu("Unique Rarity Weight")] public RangeNode<int> UniqueRarityWeight { get; set; } = new RangeNode<int>(20, -200, 200);
         [Menu("Rare Rarity Weight")] public RangeNode<int> RareRarityWeight { get; set; } = new RangeNode<int>(15, -200, 200);

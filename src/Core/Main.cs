@@ -52,6 +52,11 @@ namespace Aimbot.Core
         private bool _automaticTargetingPaused = false;
         private bool _pauseKeyWasPressed = false;
         private DateTime _lastTargetTime = DateTime.MinValue;
+        
+        // Line of sight terrain data
+        private int _numRows, _numCols;
+        private byte[,] _terrainTiles;
+        private bool _terrainDataLoaded = false;
 
         public string[] LightlessGrub =
         {
@@ -325,7 +330,9 @@ namespace Aimbot.Core
                 
                 // Display debug info on screen
                 var mouseMode = Settings.ClickWithoutMouseMovement.Value ? "No Mouse Movement" : "With Mouse Movement";
-                var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}\nMode: {mouseMode}";
+                var losStatus = Settings.EnableLineOfSight.Value ? "Enabled" : "Disabled";
+                var terrainStatus = _terrainDataLoaded ? "Loaded" : "Not Loaded";
+                var debugText = $"Total Entities: {totalEntities}\nMonsters: {monstersInRange}\nPlayers: {playersInRange}\nMode: {mouseMode}\nLine of Sight: {losStatus}\nTerrain Data: {terrainStatus}";
                 Graphics.DrawText(debugText, new Vector2(10, 100), Color.Yellow, 12);
                 
                 foreach (Entity entity in GameController.Entities)
@@ -341,7 +348,24 @@ namespace Aimbot.Core
                         Vector2 chestScreenCoords = camera.WorldToScreen(entity.Pos.Translate(0, 0, -170));
                         if (chestScreenCoords == new Vector2()) continue;
                         Vector2 iconRect = new Vector2(chestScreenCoords.X, chestScreenCoords.Y);
+                        
+                        // Show weight
                         Graphics.DrawText(AimWeightEB(entity).ToString(), iconRect, Color.White, 15);
+                        
+                        // Show line of sight debug if enabled
+                        if (Settings.ShowLineOfSightDebug.Value && Settings.EnableLineOfSight.Value)
+                        {
+                            bool hasLOS = HasLineOfSight(GameController.Player.Pos, entity.Pos);
+                            Color losColor = hasLOS ? Color.Green : Color.Red;
+                            string losText = hasLOS ? "LOS" : "BLOCKED";
+                            
+                            Vector2 losTextPos = new Vector2(iconRect.X, iconRect.Y + 20);
+                            Graphics.DrawText(losText, losTextPos, losColor, 12);
+                            
+                            // Draw line from player to entity
+                            Vector2 playerScreenPos = camera.WorldToScreen(GameController.Player.Pos);
+                            Graphics.DrawLine(playerScreenPos, chestScreenCoords, 1, losColor);
+                        }
                     }
                 }
             }
@@ -385,6 +409,78 @@ namespace Aimbot.Core
             // Update static Player utility references on area change
             AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
             AimBot.Utilities.Player.AreaHash = GameController.Game.IngameState.Data.CurrentAreaHash;
+            
+            // Load terrain data
+            LoadTerrainData(area);
+        }
+
+        private void LoadTerrainData(AreaInstance area)
+        {
+            try
+            {
+                _terrainDataLoaded = false;
+                
+                if (GameController?.IngameState?.Data?.Terrain == null)
+                {
+                    LogMessage("No terrain data available", 3);
+                    return;
+                }
+                
+                var terrain = GameController.IngameState.Data.Terrain;
+                
+                // Load melee layer data (walkable terrain)
+                var terrainBytes = GameController.Memory.ReadBytes(terrain.LayerMelee.First, terrain.LayerMelee.Size);
+                _numCols = (int)(terrain.NumCols - 1) * 23;
+                _numRows = (int)(terrain.NumRows - 1) * 23;
+                
+                if ((_numCols & 1) > 0)
+                    _numCols++;
+                
+                _terrainTiles = new byte[_numCols, _numRows];
+                int dataIndex = 0;
+                
+                // Process melee layer - determines walkable areas
+                for (int y = 0; y < _numRows; y++)
+                {
+                    for (int x = 0; x < _numCols; x += 2)
+                    {
+                        var b = terrainBytes[dataIndex + (x >> 1)];
+                        _terrainTiles[x, y] = (byte)((b & 0xf) > 0 ? 1 : 255);
+                        _terrainTiles[x + 1, y] = (byte)((b >> 4) > 0 ? 1 : 255);
+                    }
+                    dataIndex += terrain.BytesPerRow;
+                }
+                
+                // Load ranged layer data (line of sight for ranged attacks)
+                terrainBytes = GameController.Memory.ReadBytes(terrain.LayerRanged.First, terrain.LayerRanged.Size);
+                dataIndex = 0;
+                
+                // Process ranged layer - determines line of sight for ranged attacks
+                for (int y = 0; y < _numRows; y++)
+                {
+                    for (int x = 0; x < _numCols; x += 2)
+                    {
+                        var b = terrainBytes[dataIndex + (x >> 1)];
+                        
+                        var current = _terrainTiles[x, y];
+                        if (current == 255) // Only update blocked tiles
+                            _terrainTiles[x, y] = (byte)((b & 0xf) > 3 ? 2 : 255);
+                        
+                        current = _terrainTiles[x + 1, y];
+                        if (current == 255) // Only update blocked tiles
+                            _terrainTiles[x + 1, y] = (byte)((b >> 4) > 3 ? 2 : 255);
+                    }
+                    dataIndex += terrain.BytesPerRow;
+                }
+                
+                _terrainDataLoaded = true;
+                LogMessage($"Terrain data loaded: {_numCols}x{_numRows} tiles", 1);
+            }
+            catch (Exception e)
+            {
+                LogError($"Failed to load terrain data: {e.Message}", 3);
+                _terrainDataLoaded = false;
+            }
         }
 
         public HashSet<string> LoadFile(string fileName)
@@ -607,6 +703,21 @@ namespace Aimbot.Core
             }
             
             Tuple<float, Entity> closestMonster = AlivePlayers.FirstOrDefault(x => x.Item1 < Settings.AimRange.Value);
+            
+            // Check line of sight for the closest player if enabled
+            if (closestMonster != null && Settings.EnableLineOfSight.Value)
+            {
+                bool hasLOS = HasLineOfSight(GameController.Player.Pos, closestMonster.Item2.Pos);
+                if (!hasLOS)
+                {
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Closest player blocked by terrain, skipping", 1);
+                    }
+                    return; // Skip targeting if line of sight is blocked
+                }
+            }
+            
             if (closestMonster != null)
             {
                 if (Settings.DetailedDebugLogging.Value)
@@ -782,6 +893,34 @@ namespace Aimbot.Core
                 if (Settings.DetailedDebugLogging.Value)
                 {
                     LogMessage($"MonsterAim: Found {entitiesInRange.Count} entities within range {Settings.AimRange.Value}", 1);
+                }
+                
+                // Filter by line of sight if enabled
+                if (Settings.EnableLineOfSight.Value)
+                {
+                    var entitiesWithLineOfSight = entitiesInRange.Where(x =>
+                    {
+                        try
+                        {
+                            bool hasLOS = HasLineOfSight(GameController.Player.Pos, x.Pos);
+                            if (!hasLOS && Settings.DetailedDebugLogging.Value)
+                            {
+                                LogMessage($"Entity {x.Path} blocked by terrain", 1);
+                            }
+                            return hasLOS;
+                        }
+                        catch
+                        {
+                            return true; // Assume clear line of sight on error
+                        }
+                    }).ToList();
+                    
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"MonsterAim: {entitiesWithLineOfSight.Count} entities have line of sight (filtered from {entitiesInRange.Count})", 1);
+                    }
+                    
+                    entitiesInRange = entitiesWithLineOfSight;
                 }
                 
                 // Log all monsters in range to debug file for potential ignoring
@@ -1450,5 +1589,112 @@ namespace Aimbot.Core
         }
 
         #endregion
+
+        /// <summary>
+        /// Checks if there is a clear line of sight between two world positions using terrain data
+        /// </summary>
+        /// <param name="startPos">Starting world position (usually player position)</param>
+        /// <param name="endPos">Target world position (usually monster position)</param>
+        /// <returns>True if line of sight is clear, false if blocked by terrain</returns>
+        private bool HasLineOfSight(Vector3 startPos, Vector3 endPos)
+        {
+            try
+            {
+                // If terrain data is not loaded, assume line of sight is clear
+                if (!_terrainDataLoaded || _terrainTiles == null)
+                {
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Terrain data not available, assuming clear line of sight", 1);
+                    }
+                    return true;
+                }
+                
+                // Convert world positions to grid coordinates
+                var startGridPos = WorldToGridPosition(startPos);
+                var endGridPos = WorldToGridPosition(endPos);
+                
+                // Check bounds
+                if (!IsValidGridPosition(startGridPos) || !IsValidGridPosition(endGridPos))
+                {
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage($"Grid positions out of bounds: start {startGridPos}, end {endGridPos}", 1);
+                    }
+                    return true; // Assume clear if out of bounds
+                }
+                
+                // Calculate distance and direction
+                var distance = Vector2.Distance(startGridPos, endGridPos);
+                if (distance < 1)
+                {
+                    return true; // Very close, assume clear
+                }
+                
+                var direction = endGridPos - startGridPos;
+                direction.Normalize();
+                
+                // Sample points along the line with higher resolution for accuracy
+                int samples = Math.Max(10, (int)(distance * 2)); // At least 10 samples, more for longer distances
+                
+                for (int i = 1; i < samples; i++) // Skip start point (i=0) and end point (i=samples)
+                {
+                    float t = (float)i / samples;
+                    var checkPos = startGridPos + t * (endGridPos - startGridPos);
+                    var gridPoint = new Vector2((int)Math.Round(checkPos.X), (int)Math.Round(checkPos.Y));
+                    
+                    if (!IsValidGridPosition(gridPoint))
+                    {
+                        continue; // Skip invalid positions
+                    }
+                    
+                    var tileValue = _terrainTiles[(int)gridPoint.X, (int)gridPoint.Y];
+                    
+                    // Check if tile blocks line of sight
+                    // 255 = blocked/unwalkable (walls, obstacles)
+                    // 1 = walkable (clear)  
+                    // 2 = ranged accessible (clear for ranged attacks)
+                    if (tileValue == 255)
+                    {
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage($"Line of sight blocked at grid position {gridPoint} (tile value: {tileValue})", 1);
+                        }
+                        return false; // Line of sight is blocked
+                    }
+                }
+                
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage($"Line of sight clear from {startGridPos} to {endGridPos} (sampled {samples} points)", 1);
+                }
+                
+                return true; // Line of sight is clear
+            }
+            catch (Exception e)
+            {
+                LogError($"Error in HasLineOfSight: {e.Message}", 3);
+                return true; // Assume clear on error to avoid breaking targeting
+            }
+        }
+        
+        /// <summary>
+        /// Converts world position to grid coordinates for terrain lookup
+        /// </summary>
+        private Vector2 WorldToGridPosition(Vector3 worldPos)
+        {
+            // This conversion may need adjustment based on how ExileCore maps world to grid coordinates
+            // For now using a basic conversion similar to what the Follower plugin uses
+            return new Vector2(worldPos.X, worldPos.Y);
+        }
+        
+        /// <summary>
+        /// Checks if grid position is within terrain bounds
+        /// </summary>
+        private bool IsValidGridPosition(Vector2 gridPos)
+        {
+            return gridPos.X >= 0 && gridPos.X < _numCols && 
+                   gridPos.Y >= 0 && gridPos.Y < _numRows;
+        }
     }
 }

@@ -36,6 +36,10 @@ Access plugin settings via **F12 → Aim Bot**:
 - **Auto Click Button**: Which mouse button to press (0=Left Click, 1=Right Click, 2=Middle Click)
 - **Auto Click Delay**: Delay before clicking after mouse movement (default: 50ms)
 
+#### Line of Sight Settings
+- **Enable Line of Sight Checking**: Prevents targeting monsters behind walls and obstacles (default: enabled)
+- **Show Line of Sight Debug**: Visual debug showing line of sight rays and blocked targets (default: disabled)
+
 #### Monster Priority Weights
 The plugin uses a weight system to prioritize targets:
 - **Unique monsters**: +20 weight (highest priority)
@@ -45,10 +49,32 @@ The plugin uses a weight system to prioritize targets:
 - **Special monsters**: Various weights for beast hearts, totems, etc.
 - **Summoned creatures**: Negative weights (lower priority)
 
+### Line of Sight System
+The plugin includes intelligent line of sight checking to prevent targeting monsters behind walls:
+
+- **Terrain Analysis**: Uses ExileCore's terrain data to detect walls and obstacles
+- **Raycast Algorithm**: Performs line-of-sight checks between player and target positions
+- **Smart Filtering**: Automatically skips monsters that are blocked by terrain
+- **Debug Visualization**: Shows line of sight rays and blocked targets when debug mode is enabled
+- **Performance Optimized**: Efficient raycasting with adjustable sampling resolution
+
+**How it works**:
+1. Plugin loads terrain collision data for each area
+2. Before targeting a monster, it performs a raycast from player to monster position
+3. If the ray hits a wall or obstacle (terrain value 255), the monster is skipped
+4. Only monsters with clear line of sight are considered for targeting
+
+**Benefits**:
+- Prevents wasted attacks on unreachable monsters
+- Improves targeting efficiency in complex terrain
+- Reduces situations where plugin targets monsters behind walls
+- Works automatically without user intervention
+
 ### Tips for Best Results
 - **Windowed Mode**: Use Path of Exile in windowed or windowed fullscreen mode
 - **Positioning**: The plugin targets within your specified range, so position yourself appropriately
 - **Settings Tuning**: Adjust monster weights based on your playstyle preferences
+- **Line of Sight**: Keep line of sight checking enabled for better targeting accuracy
 - **Debugging**: Enable debug options if targeting isn't working as expected
 
 ### Troubleshooting
@@ -77,6 +103,7 @@ The plugin uses a weight system to prioritize targets:
 - **Visual debugging** for monster weights
 - **Configurable targeting weights** for different monster types
 - **Invulnerability detection** - automatically skips monsters that cannot take damage
+- **Line of sight checking** - prevents targeting monsters behind walls and obstacles
 - **Flexible debug logging** - essential messages always shown, detailed logs optional
 - **Auto-click functionality** - automatically clicks when targeting (optional)
 

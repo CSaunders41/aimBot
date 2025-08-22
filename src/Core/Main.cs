@@ -206,10 +206,10 @@ namespace Aimbot.Core
                 }
                 
                 // Show auto-click delay countdown when enabled and delay is active
-                if (Settings.AutomaticTargeting.Value && !_automaticTargetingPaused && Settings.AutoClickDelayMs.Value > 0)
+                if (Settings.AutomaticTargeting.Value && !_automaticTargetingPaused && Settings.AutoClickDelay.Value > 0)
                 {
                     var timeSinceLastTarget = DateTime.Now - _lastTargetTime;
-                    var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelayMs.Value);
+                    var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelay.Value);
                     var remaining = requiredDelay - timeSinceLastTarget;
                     
                     if (remaining.TotalMilliseconds > 0 && _lastTargetTime != DateTime.MinValue)
@@ -1216,7 +1216,7 @@ namespace Aimbot.Core
                 
                 // Apply delay before auto-clicking to give user time to react
                 var timeSinceLastTarget = DateTime.Now - _lastTargetTime;
-                var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelayMs.Value);
+                var requiredDelay = TimeSpan.FromMilliseconds(Settings.AutoClickDelay.Value);
                 
                 if (timeSinceLastTarget < requiredDelay)
                 {

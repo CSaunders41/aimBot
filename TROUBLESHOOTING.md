@@ -17,7 +17,7 @@
 
 ### 3. Distance Calculation Problem
 **Problem**: `Misc.EntityDistance()` was using `Player.Entity.Pos` which could be null.
-**Fix**: Changed to use `GameController.Player.Pos` directly with `Vector3.Distance()`.
+**Fix**: Updated `Misc.EntityDistance` to take the player's position (from `GameController.Player.Pos`) and compute distance with `Vector3.Distance()`.
 
 ### 4. Enhanced Debugging
 **Problem**: Not enough visibility into what the plugin is detecting.

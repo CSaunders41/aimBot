@@ -693,7 +693,7 @@ namespace Aimbot.Core
                                                                      && TryGetStat("ignored_by_enemy_target_selection", x) == 0
                                                                      && TryGetStat("cannot_die", x) == 0
                                                                      && TryGetStat("cannot_be_damaged", x) == 0)
-                                                            .Select(x => new Tuple<float, Entity>(Misc.EntityDistance(x), x))
+                                                            .Select(x => new Tuple<float, Entity>(Misc.EntityDistance(x, GameController.Player.Pos), x))
                                                             .OrderBy(x => x.Item1)
                                                             .ToList();
             
@@ -1098,7 +1098,7 @@ namespace Aimbot.Core
                 Entity m = entity;
                 int weight = 0;
                 
-                // Use direct distance calculation instead of Misc.EntityDistance which might fail
+                // Calculate distance from the player's position for weighting
                 if (GameController?.Player != null)
                 {
                     var distance = Vector3.Distance(GameController.Player.Pos, m.Pos);

@@ -13,7 +13,7 @@ namespace Aimbot.Core
         //=== TARGETING MODE SETTINGS ===
         [Menu("Automatic Targeting (No Key Required)")] public ToggleNode AutomaticTargeting { get; set; } = new ToggleNode(false);
         [Menu("Auto Click Button (0=Left, 1=Right, 2=Middle)")] public RangeNode<int> AutoClickButton { get; set; } = new RangeNode<int>(0, 0, 2);
-        [Menu("Auto Click Delay")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(50, 10, 500);
+        [Menu("Auto-Click Delay (ms)")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(200, 0, 2000);
         [Menu("Click Without Mouse Movement (For AoE Skills)")] public ToggleNode ClickWithoutMouseMovement { get; set; } = new ToggleNode(false);
         
         //=== MANUAL MODE SETTINGS ===
@@ -22,7 +22,6 @@ namespace Aimbot.Core
         
         //=== PAUSE/OVERRIDE SETTINGS ===
         [Menu("Pause Automatic Targeting Key")] public HotkeyNode PauseKey { get; set; } = Keys.P;
-        [Menu("Auto-Click Delay (ms)")] public RangeNode<int> AutoClickDelayMs { get; set; } = new RangeNode<int>(200, 0, 2000);
         
         //=== GENERAL SETTINGS ===
         [Menu("Aim Range")] public RangeNode<int> AimRange { get; set; } = new RangeNode<int>(600, 1, 1000);

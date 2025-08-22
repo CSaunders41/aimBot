@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="EnsureExapiPackage">
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
@@ -10,18 +10,20 @@
     <EmbedAllSources>true</EmbedAllSources>
     <!--Don't bother setting anything to do with the output path, HUD will do it for you if you put the source code inside Plugins/Source-->
   </PropertyGroup>
-  
-  <Error Condition="'$(exapiPackage)' == ''"
-         Text="Set the 'exapiPackage' environment variable to the directory containing ExileCore.dll and GameOffsets.dll." />
+
+  <Target Name="EnsureExapiPackage">
+    <Error Condition="'$(exapiPackage)' == ''"
+           Text="Set the 'exapiPackage' environment variable to the directory containing ExileCore.dll and GameOffsets.dll." />
+  </Target>
 
   <ItemGroup>
     <!--Rather than replacing this with absolute or relative paths, you should create an environment variable for wherever your HUD folder is-->
     <Reference Include="ExileCore">
-      <HintPath>$(exapiPackage)\ExileCore.dll</HintPath>
+      <HintPath>$(exapiPackage)\\ExileCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameOffsets">
-      <HintPath>$(exapiPackage)\GameOffsets.dll</HintPath>
+      <HintPath>$(exapiPackage)\\GameOffsets.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

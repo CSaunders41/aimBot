@@ -795,18 +795,10 @@ namespace Aimbot.Core
         {
             if (!entity.HasComponent<Life>()) return false;
             var life = entity.GetComponent<Life>();
-            
-            // Note: Need to check if Buffs property exists or use alternative buff access method
-            // For now, implementing a basic check - this may need adjustment based on actual ExileCore API
-            try 
-            {
-                // This is a placeholder - actual buff checking may need different approach
-                return false; // Temporarily disable buff checking until we understand the correct API
-            }
-            catch
-            {
-                return false;
-            }
+            var buffs = life?.Buffs;
+            if (buffs == null) return false;
+
+            return HasAnyBuff(buffs, buffList, contains);
         }
 
         public bool HasAnyBuff(List<Buff> entityBuffs, string[] buffList, bool contains = false)

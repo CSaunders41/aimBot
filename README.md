@@ -111,7 +111,7 @@ The plugin includes intelligent line of sight checking to prevent targeting mons
 
 ### Prerequisites
 1. **ExileCore/ExileAPI** installed and working
-2. **Environment Variable**: Set `exapiPackage` to your ExileApi-Compiled-master folder path
+2. **Environment Variable**: Set `exapiPackage` to the directory containing `ExileCore.dll` and `GameOffsets.dll` (e.g., the [ExileApi-Compiled](https://github.com/exApiTools/ExileApi-Compiled) repository)
 
 ### Installation
 1. **Clone/Download** this repository

@@ -1588,7 +1588,7 @@ namespace Aimbot.Core
         /// <param name="startPos">Starting world position (usually player position)</param>
         /// <param name="endPos">Target world position (usually monster position)</param>
         /// <returns>True if line of sight is clear, false if blocked by terrain</returns>
-        private bool HasLineOfSight(Vector3 startPos, Vector3 endPos)
+        internal bool HasLineOfSight(Vector3 startPos, Vector3 endPos)
         {
             try
             {
@@ -1673,7 +1673,7 @@ namespace Aimbot.Core
         /// <summary>
         /// Converts world position to grid coordinates for terrain lookup
         /// </summary>
-        private Vector2 WorldToGridPosition(Vector3 worldPos)
+        internal Vector2 WorldToGridPosition(Vector3 worldPos)
         {
             // This conversion may need adjustment based on how ExileCore maps world to grid coordinates
             // For now using a basic conversion similar to what the Follower plugin uses
@@ -1683,7 +1683,7 @@ namespace Aimbot.Core
         /// <summary>
         /// Checks if grid position is within terrain bounds
         /// </summary>
-        private bool IsValidGridPosition(Vector2 gridPos)
+        internal bool IsValidGridPosition(Vector2 gridPos)
         {
             return gridPos.X >= 0 && gridPos.X < _numCols && 
                    gridPos.Y >= 0 && gridPos.Y < _numRows;

@@ -806,9 +806,9 @@ namespace AimBot.Core
 
         public bool HasAnyBuff(Entity entity, string[] buffList, bool contains = false)
         {
-            if (!entity.HasComponent<Life>()) return false;
-            var life = entity.GetComponent<Life>();
-            var buffs = life?.Buffs;
+            if (!entity.HasComponent<Buffs>()) return false;
+            var buffsComponent = entity.GetComponent<Buffs>();
+            var buffs = buffsComponent?.BuffsList;
             if (buffs == null) return false;
 
             return HasAnyBuff(buffs, buffList, contains);
@@ -1519,7 +1519,7 @@ namespace AimBot.Core
                     // Current ignored monsters list
                     ImGui.Text($"Currently Ignored Monsters ({_ignoredMonstersList.Count}):");
                     
-                    if (ImGui.BeginChild("IgnoredMonstersList", new ImGuiVector2(0, 300), ImGuiChildFlags.Border))
+                    if (ImGui.BeginChild("IgnoredMonstersList", new ImGuiVector2(0, 300), true))
                     {
                         for (int i = 0; i < _ignoredMonstersList.Count; i++)
                         {

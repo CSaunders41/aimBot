@@ -112,6 +112,10 @@ namespace AimBot.Core
             
             // Register auto-click key with ExileCore input subsystem
             try { Input.RegisterKey(Settings.AutoClickKey.Value); } catch {}
+            Settings.AutoClickKey.OnValueChanged += () =>
+            {
+                try { Input.RegisterKey(Settings.AutoClickKey.Value); } catch {}
+            };
             
             return base.Initialise();
         }
@@ -243,6 +247,21 @@ namespace AimBot.Core
                     _aiming = true;
                     string mode = Settings.AutomaticTargeting.Value ? "Automatic" : "Manual";
                     LogMessage($"{mode} targeting activated! AimPlayers: {Settings.AimPlayers.Value}", 1);
+
+                    // If configured, hold the auto-click key while aiming
+                    if (Settings.HoldAutoClickWhileAiming.Value)
+                    {
+                        try
+                        {
+                            var requestControl = GameController?.PluginBridge?.GetMethod<Func<string, int, bool>>("InputCoordinator.RequestControl");
+                            if (requestControl == null || requestControl("Aim Bot", 300))
+                            {
+                                Input.KeyDown(Settings.AutoClickKey.Value);
+                            }
+                        }
+                        catch {}
+                    }
+
                     Aimbot();
                 }
                 else
@@ -254,6 +273,16 @@ namespace AimBot.Core
                             LogMessage($"Stopping aim: {aimReason}", 1);
                         }
                         _aiming = false;
+
+                        // If we were holding the key, release it now
+                        if (Settings.HoldAutoClickWhileAiming.Value)
+                        {
+                            try
+                            {
+                                Input.KeyUp(Settings.AutoClickKey.Value);
+                            }
+                            catch {}
+                        }
                     }
                     
                     // Only restore mouse position in manual mode when key is released
@@ -1266,6 +1295,13 @@ namespace AimBot.Core
                 var key = Settings.AutoClickKey.Value;
                 bool useLegacy = Settings.UseLegacyKeyInjection.Value || Environment.GetEnvironmentVariable("AIMBOT_USE_LEGACY_KEY") == "1";
                 LogMessage($"Auto-click settings - Key: {key}, Delay: {Settings.AutoClickDelay.Value}ms, LegacyKey={useLegacy}", 1);
+                
+                // If we're already holding the key due to setting, skip discrete press
+                if (Settings.HoldAutoClickWhileAiming.Value)
+                {
+                    LogMessage("Hold-while-aiming enabled; skipping discrete press", 1);
+                    return;
+                }
                 
                 // Add a small delay before clicking
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);

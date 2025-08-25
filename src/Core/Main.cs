@@ -1270,9 +1270,30 @@ namespace AimBot.Core
                 // Add a small delay before clicking
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);
                 
-                LogMessage($"About to press key: {key}", 1);
-                Keyboard.KeyPress(key, Settings.AutoClickKeyHold.Value);
-                LogMessage($"Auto-pressed key: {key}", 1);
+                // Request input control via PluginBridge InputCoordinator (if available)
+                bool hasControl = true;
+                try
+                {
+                    var requestControl = GameController?.PluginBridge?.GetMethod<Func<string, int, bool>>("InputCoordinator.RequestControl");
+                    if (requestControl != null)
+                    {
+                        hasControl = requestControl("Aim Bot", 300);
+                    }
+                }
+                catch { }
+
+                if (!hasControl)
+                {
+                    LogMessage("Input control denied by coordinator; skipping key press", 1);
+                    return;
+                }
+
+                // Use ExileCore.Input to press the key (more compatible with PoE)
+                LogMessage($"About to press key (Input): {key}", 1);
+                Input.KeyDown(key);
+                System.Threading.Thread.Sleep(Math.Max(30, Settings.AutoClickKeyHold.Value));
+                Input.KeyUp(key);
+                LogMessage($"Auto-pressed key (Input): {key}", 1);
             }
             catch (Exception e)
             {

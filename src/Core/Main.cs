@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using AimBot.Utilities;
 using ImGuiNET;
 using static AimBot.Utilities.ImGuiExtension;
@@ -108,6 +109,9 @@ namespace AimBot.Core
             AimBot.Utilities.Player.Entity = GameController.Player;
             AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
             AimBot.Utilities.Player.AreaHash = GameController.Game.IngameState.Data.CurrentAreaHash;
+            
+            // Register auto-click key with ExileCore input subsystem
+            try { Input.RegisterKey(Settings.AutoClickKey.Value); } catch {}
             
             return base.Initialise();
         }
@@ -1248,6 +1252,14 @@ namespace AimBot.Core
                     return;
                 }
                 
+                // Ensure PoE window is foreground to receive input
+                try
+                {
+                    GameController.Window.BringToForeground();
+                    Thread.Sleep(5);
+                }
+                catch {}
+
                 // Record this targeting time
                 _lastTargetTime = DateTime.Now;
                 

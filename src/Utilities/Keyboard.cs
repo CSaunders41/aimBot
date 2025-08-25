@@ -87,8 +87,8 @@ namespace AimBot.Utilities
             var useLegacy = Environment.GetEnvironmentVariable("AIMBOT_USE_LEGACY_KEY") == "1";
             if (useLegacy)
             {
-                var flags = keyUp ? KEYEVENTF_KEYUP : 0;
-                keybd_event((byte)key, 0, flags, UIntPtr.Zero);
+                uint legacyFlags = keyUp ? KEYEVENTF_KEYUP : 0;
+                keybd_event((byte)key, 0, legacyFlags, UIntPtr.Zero);
                 return;
             }
 

@@ -107,13 +107,14 @@
 1. Open ExileCore settings (F12)
 2. Go to "Aim Bot" plugin settings
 3. Enable "Automatic Targeting (No Key Required)"
-4. Choose desired "Auto Click Button" (0=Left Click, 1=Right Click, 2=Middle Click)
-5. Adjust "Auto Click Delay" if needed (50ms default works well)
+4. Enable "Auto Click" if you want automatic clicks
+5. Choose desired "Auto Click Button" (0=Left Click, 1=Right Click, 2=Middle Click)
+6. Adjust "Auto-Click Delay (ms)" as needed (default is 200ms; can be changed via slider)
 
 **Option B: Manual Mode**
 1. Keep "Automatic Targeting" disabled
 2. The plugin will use the manual "Aim Key" (default: 'A')
-3. You'll need to hold the key down to aim, and click manually
+3. Hold the key down to aim. If you also want automatic clicks in manual mode, enable both "Auto Click" and "Auto Click in Manual Mode"
 
 ### Step 2: Configure Settings
 1. Enable "Debug Monster Weight" to see entity counts on screen
@@ -256,17 +257,18 @@
 - Status checks no longer flash constantly
 
 ### Issue: Automatic clicking not working
-**Check**: Is "Automatic Targeting" enabled? (Manual mode doesn't auto-click)
+**Check**: Is "Auto Click" enabled? (Auto-click only runs if this toggle is ON)
+**Check**: Mode matters: In automatic mode, AutoClick fires when enabled. In manual mode, enable "Auto Click in Manual Mode" and hold the aim key
 **Check**: Is the correct mouse button selected (0=Left, 1=Right, 2=Middle)?
-**Check**: Try increasing "Auto Click Delay" if clicks seem to miss
+**Check**: Try adjusting "Auto-Click Delay (ms)" if clicks seem to miss timing
 **Check**: Verify the game accepts the selected mouse button for your skills
-**Debug**: Look for "About to call PerformAutoClick" messages in logs
+**Debug**: Look for "PerformAutoClick called" and "Auto-clicked:" messages in logs
 
 ### Issue: Auto-click too fast/slow
-**Solution**: Adjust "Auto Click Delay" setting:
+**Solution**: Adjust "Auto-Click Delay (ms)" setting:
 - Increase delay if clicks are happening too quickly after aim
 - Decrease delay if there's too much pause between aim and click
-- Default 50ms works well for most setups
+- Default 200ms works well for most setups (adjust to taste)
 
 ### Issue: Plugin too aggressive in automatic mode
 **Solution**: Adjust aim range or monster weights:
@@ -427,7 +429,7 @@ Automatic targeting (no valid targets)
 ### If auto-click not working as expected:
 - Verify "Auto Click" is enabled
 - Check "Auto Click Button" matches your attack setup
-- Adjust "Auto Click Delay" for timing issues
+- Adjust "Auto-Click Delay (ms)" for timing issues
 
 ### If mouse movement is too fast/slow:
 - Adjust "Aim Loop Delay" setting
@@ -441,8 +443,9 @@ Automatic targeting (no valid targets)
 - Detailed Debug Logging: False (minimal output)
 - Debug Monster Weight: False (no weight display)
 - Automatic Targeting: False (manual mode by default)
+- Auto Click: False (off by default)
 - Auto Click Button: 0 (Left Click)
-- Auto Click Delay: 50ms
+- Auto-Click Delay (ms): 200ms
 - Click Without Mouse Movement: False (normal aiming by default)
 - Pause Automatic Targeting Key: P
 - Auto-Click Delay (ms): 200ms

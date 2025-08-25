@@ -18,7 +18,7 @@ A modernized auto-aim plugin for Path of Exile, migrated from the legacy PoeHUD 
 - **Visual Feedback**: Enable "Debug Monster Weight" to see weight values above monsters
 - **Invulnerability Handling**: Plugin automatically skips monsters that are invulnerable (grayed out health bars)
 - **Smart Logging**: Essential messages are always shown, detailed debug info only when enabled
-- **Auto-Click**: Optionally enable automatic clicking when targets are acquired (configurable button)
+- **Auto-Click**: Optionally enable automatic clicking when targets are acquired (toggle required; configurable button)
 
 ### Settings Overview
 Access plugin settings via **F12 → Aim Bot**:
@@ -33,8 +33,9 @@ Access plugin settings via **F12 → Aim Bot**:
 - **Debug Monster Weight**: Show weight values above monsters
 - **Detailed Debug Logging**: Enable verbose technical logging for troubleshooting
 - **Auto Click**: Automatically click when targeting (default: disabled)
+- **Auto Click in Manual Mode**: When enabled, holding the aim key will also auto-click
 - **Auto Click Button**: Which mouse button to press (0=Left Click, 1=Right Click, 2=Middle Click)
-- **Auto Click Delay**: Delay before clicking after mouse movement (default: 50ms)
+- **Auto-Click Delay (ms)**: Delay before clicking after mouse movement (default: 200ms; adjustable)
 
 #### Line of Sight Settings
 - **Enable Line of Sight Checking**: Prevents targeting monsters behind walls and obstacles (default: enabled)
@@ -76,6 +77,7 @@ The plugin includes intelligent line of sight checking to prevent targeting mons
 - **Settings Tuning**: Adjust monster weights based on your playstyle preferences
 - **Line of Sight**: Keep line of sight checking enabled for better targeting accuracy
 - **Debugging**: Enable debug options if targeting isn't working as expected
+- **Auto-Click Modes**: Auto-Click requires the toggle ON. It fires in Automatic Targeting; and can also fire in Manual mode if "Auto Click in Manual Mode" is enabled
 
 ### Troubleshooting
 - **Not targeting**: Check that monsters are within your aim range
@@ -142,6 +144,10 @@ The plugin settings are accessible via the F12 menu in ExileCore:
 - **Aim Loop Delay**: Delay between aim adjustments
 - **Show Aim Range**: Visual range indicator
 - **Aim Players**: Target players instead of monsters
+- **Auto Click**: Automatically click when targeting (toggle)
+- **Auto Click in Manual Mode**: Also auto-click while holding the aim key
+- **Auto Click Button**: Mouse button to click (0=Left, 1=Right, 2=Middle)
+- **Auto-Click Delay (ms)**: Delay before clicking (default: 200ms; adjustable)
 
 ### Monster Weight System
 Configure targeting priorities for different monster types:

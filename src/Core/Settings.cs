@@ -4,7 +4,7 @@ using ExileCore.Shared.Attributes;
 using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
 
-namespace Aimbot.Core
+namespace AimBot.Core
 {
     public class Settings : ISettings
     {
@@ -12,6 +12,8 @@ namespace Aimbot.Core
         
         //=== TARGETING MODE SETTINGS ===
         [Menu("Automatic Targeting (No Key Required)")] public ToggleNode AutomaticTargeting { get; set; } = new ToggleNode(false);
+        [Menu("Auto Click (Enable Automatic Clicks)")] public ToggleNode AutoClick { get; set; } = new ToggleNode(false);
+        [Menu("Auto Click in Manual Mode")] public ToggleNode AutoClickInManualMode { get; set; } = new ToggleNode(false);
         [Menu("Auto Click Button (0=Left, 1=Right, 2=Middle)")] public RangeNode<int> AutoClickButton { get; set; } = new RangeNode<int>(0, 0, 2);
         [Menu("Auto-Click Delay (ms)")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(200, 0, 2000);
         [Menu("Click Without Mouse Movement (For AoE Skills)")] public ToggleNode ClickWithoutMouseMovement { get; set; } = new ToggleNode(false);

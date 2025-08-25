@@ -25,7 +25,7 @@ using SharpDX;
 using Player = ExileCore.PoEMemory.Components.Player;
 using ImGuiVector2 = System.Numerics.Vector2;
 
-namespace Aimbot.Core
+namespace AimBot.Core
 {
     public class Main : BaseSettingsPlugin<Settings>
     {
@@ -43,6 +43,8 @@ namespace Aimbot.Core
         private string _newMonsterPath = "";
         private List<string> _ignoredMonstersList = new List<string>();
         private int _selectedIgnoredIndex = -1;
+        private int _ignoredEditorPosX = 100;
+        private int _ignoredEditorPosY = 100;
         
         // Debug file logging
         private string _debugLogPath = "";
@@ -686,8 +688,19 @@ namespace Aimbot.Core
 
         private void PlayerAim()
         {
-            List<Tuple<float, Entity>> AlivePlayers = _entities
-                                                            .Where(x => x.HasComponent<Player>()
+            if (GameController?.Entities == null || GameController?.Player == null)
+            {
+                if (Settings.DetailedDebugLogging.Value)
+                {
+                    LogMessage("PlayerAim: GameController or Player null", 1);
+                }
+                return;
+            }
+
+            List<Tuple<float, Entity>> AlivePlayers = GameController.Entities
+                                                            .Where(x => x != null
+                                                                     && x.IsValid
+                                                                     && x.HasComponent<Player>()
                                                                      && x.IsAlive
                                                                      && x.Address != GameController.Player.Address
                                                                      && TryGetStat("ignored_by_enemy_target_selection", x) == 0
@@ -1197,8 +1210,18 @@ namespace Aimbot.Core
             try
             {
                 string mode = Settings.ClickWithoutMouseMovement.Value ? "No Mouse Movement" : "With Mouse Movement";
-                LogMessage($"PerformAutoClick called - AutomaticTargeting enabled: {Settings.AutomaticTargeting.Value}, Mode: {mode}", 1);
-                
+                LogMessage($"PerformAutoClick called - AutoClick: {Settings.AutoClick.Value}, AutomaticTargeting: {Settings.AutomaticTargeting.Value}, Mode: {mode}", 1);
+
+                // Require AutoClick toggle to be enabled
+                if (!Settings.AutoClick.Value)
+                {
+                    if (Settings.DetailedDebugLogging.Value)
+                    {
+                        LogMessage("Auto-click disabled in settings; skipping click", 1);
+                    }
+                    return;
+                }
+
                 // In automatic targeting mode, always perform auto-click
                 // In manual mode, auto-click is disabled since manual clicking is expected
                 if (!Settings.AutomaticTargeting.Value) 
@@ -1447,10 +1470,24 @@ namespace Aimbot.Core
             {
                 // Create a window for the ignored monsters editor  
                 bool showEditor = Settings.ShowIgnoredMonstersEditor.Value;
+
+                // Apply non-persistent window position from sliders
+                ImGui.SetNextWindowPos(new ImGuiVector2(_ignoredEditorPosX, _ignoredEditorPosY), ImGuiCond.None, new ImGuiVector2(0, 0));
+
                 if (ImGui.Begin("Ignored Monsters Editor", ref showEditor))
                 {
                     Settings.ShowIgnoredMonstersEditor.Value = showEditor;
                     ImGui.Text("Manage monsters to ignore during targeting");
+                    ImGui.Separator();
+
+                    // Window position controls (not persisted)
+                    ImGui.Text("Window Position (not saved):");
+                    int posX = _ignoredEditorPosX;
+                    int posY = _ignoredEditorPosY;
+                    ImGui.SliderInt("X##ignored_editor_pos_x", ref posX, 0, 4000);
+                    ImGui.SliderInt("Y##ignored_editor_pos_y", ref posY, 0, 4000);
+                    _ignoredEditorPosX = posX;
+                    _ignoredEditorPosY = posY;
                     ImGui.Separator();
                     
                     // Add new monster section

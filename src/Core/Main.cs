@@ -1252,7 +1252,8 @@ namespace AimBot.Core
                 _lastTargetTime = DateTime.Now;
                 
                 var key = Settings.AutoClickKey.Value;
-                LogMessage($"Auto-click settings - Key: {key}, Delay: {Settings.AutoClickDelay.Value}ms", 1);
+                bool useLegacy = Settings.UseLegacyKeyInjection.Value || Environment.GetEnvironmentVariable("AIMBOT_USE_LEGACY_KEY") == "1";
+                LogMessage($"Auto-click settings - Key: {key}, Delay: {Settings.AutoClickDelay.Value}ms, LegacyKey={useLegacy}", 1);
                 
                 // Add a small delay before clicking
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);

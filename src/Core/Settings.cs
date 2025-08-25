@@ -16,6 +16,7 @@ namespace AimBot.Core
         [Menu("Auto Click in Manual Mode")] public ToggleNode AutoClickInManualMode { get; set; } = new ToggleNode(false);
         [Menu("Auto Click Key")] public HotkeyNode AutoClickKey { get; set; } = Keys.Q;
         [Menu("Auto-Click Delay (ms)")] public RangeNode<int> AutoClickDelay { get; set; } = new RangeNode<int>(200, 0, 2000);
+        [Menu("Use Legacy Keyboard Injection (keybd_event)")] public ToggleNode UseLegacyKeyInjection { get; set; } = new ToggleNode(false);
         [Menu("Click Without Mouse Movement (For AoE Skills)")] public ToggleNode ClickWithoutMouseMovement { get; set; } = new ToggleNode(false);
         
         //=== MANUAL MODE SETTINGS ===

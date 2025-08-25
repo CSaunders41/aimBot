@@ -12,6 +12,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace AimBot.Utilities
 {
@@ -55,6 +56,10 @@ namespace AimBot.Utilities
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
+        // Legacy API as fallback for certain games
+        [DllImport("user32.dll", EntryPoint = "keybd_event", SetLastError = true)]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
 
         public static void KeyDown(Keys key) { SendKey(key, false); }
 
@@ -78,6 +83,15 @@ namespace AimBot.Utilities
 
         private static void SendKey(Keys key, bool keyUp)
         {
+            // Allow runtime override via environment toggle for quick experimentation
+            var useLegacy = Environment.GetEnvironmentVariable("AIMBOT_USE_LEGACY_KEY") == "1";
+            if (useLegacy)
+            {
+                var flags = keyUp ? KEYEVENTF_KEYUP : 0;
+                keybd_event((byte)key, 0, flags, UIntPtr.Zero);
+                return;
+            }
+
             // Use scancodes; some games/overlays ignore VK-based input
             ushort scan = (ushort)MapVirtualKey((uint)key, MAPVK_VK_TO_VSC);
             uint flags = KEYEVENTF_SCANCODE | (keyUp ? KEYEVENTF_KEYUP : 0);

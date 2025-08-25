@@ -1222,11 +1222,11 @@ namespace AimBot.Core
                     return;
                 }
 
-                // In automatic targeting mode, always perform auto-click
-                // In manual mode, auto-click is disabled since manual clicking is expected
-                if (!Settings.AutomaticTargeting.Value) 
+                // Decide if auto-click should fire based on mode and setting
+                bool allowAutoClick = Settings.AutomaticTargeting.Value || (Settings.AutoClickInManualMode.Value && !Settings.AutomaticTargeting.Value);
+                if (!allowAutoClick)
                 {
-                    LogMessage("Manual mode active - auto-click is disabled, expecting manual click", 1);
+                    LogMessage("Auto-click disabled in current mode", 1);
                     return;
                 }
                 
@@ -1251,50 +1251,15 @@ namespace AimBot.Core
                 // Record this targeting time
                 _lastTargetTime = DateTime.Now;
                 
-                string buttonName = Settings.AutoClickButton.Value switch
-                {
-                    0 => "Left Click",
-                    1 => "Right Click", 
-                    2 => "Middle Click",
-                    _ => "Unknown"
-                };
-                
-                LogMessage($"Auto-click settings - Button: {Settings.AutoClickButton.Value} ({buttonName}), Delay: {Settings.AutoClickDelay.Value}ms", 1);
+                var key = Settings.AutoClickKey.Value;
+                LogMessage($"Auto-click settings - Key: {key}, Delay: {Settings.AutoClickDelay.Value}ms", 1);
                 
                 // Add a small delay before clicking
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);
                 
-                LogMessage($"About to perform auto-click with button: {Settings.AutoClickButton.Value} ({buttonName})", 1);
-                
-                switch (Settings.AutoClickButton.Value)
-                {
-                    case 0: // Left Click
-                        LogMessage("Executing left click", 1);
-                        Mouse.LeftMouseDown();
-                        System.Threading.Thread.Sleep(10); // Brief hold
-                        Mouse.LeftMouseUp();
-                        LogMessage("Left click completed", 1);
-                        break;
-                    case 1: // Right Click
-                        LogMessage("Executing right click", 1);
-                        Mouse.RightMouseDown();
-                        System.Threading.Thread.Sleep(10); // Brief hold
-                        Mouse.RightMouseUp();
-                        LogMessage("Right click completed", 1);
-                        break;
-                    case 2: // Middle Click
-                        LogMessage("Executing middle click", 1);
-                        Mouse.MiddleMouseDown();
-                        System.Threading.Thread.Sleep(10); // Brief hold
-                        Mouse.MiddleMouseUp();
-                        LogMessage("Middle click completed", 1);
-                        break;
-                    default:
-                        LogError($"Unknown auto-click button value: {Settings.AutoClickButton.Value}", 3);
-                        return;
-                }
-                
-                LogMessage($"Auto-clicked: {buttonName}", 1);
+                LogMessage($"About to press key: {key}", 1);
+                Keyboard.KeyPress(key);
+                LogMessage($"Auto-pressed key: {key}", 1);
             }
             catch (Exception e)
             {

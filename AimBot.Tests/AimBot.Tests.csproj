@@ -1,8 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <!-- Align test project with plugin references when building locally -->
+  <ItemGroup Condition="'$(exapiPackage)' != ''">
+    <Reference Include="ExileCore">
+      <HintPath>$(exapiPackage)\\ExileCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameOffsets">
+      <HintPath>$(exapiPackage)\\GameOffsets.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../src/AimBot.csproj" />
   </ItemGroup>

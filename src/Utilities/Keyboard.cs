@@ -76,6 +76,13 @@ namespace AimBot.Utilities
             KeyUp(key);
         }
 
+        public static void KeyPress(Keys key, int holdMs)
+        {
+            KeyDown(key);
+            Thread.Sleep(Math.Max(ActionDelay, holdMs));
+            KeyUp(key);
+        }
+
         [DllImport("USER32.dll")]
         private static extern short GetKeyState(int nVirtKey);
 

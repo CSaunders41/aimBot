@@ -1259,7 +1259,7 @@ namespace AimBot.Core
                 System.Threading.Thread.Sleep(Settings.AutoClickDelay.Value);
                 
                 LogMessage($"About to press key: {key}", 1);
-                Keyboard.KeyPress(key);
+                Keyboard.KeyPress(key, Settings.AutoClickKeyHold.Value);
                 LogMessage($"Auto-pressed key: {key}", 1);
             }
             catch (Exception e)

@@ -19,10 +19,12 @@ namespace AimBot.Utilities
     {
         // SendInput constants
         private const uint INPUT_KEYBOARD = 1;
+        private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         private const uint KEYEVENTF_KEYUP = 0x0002;
-        private const uint KEYEVENTF_SCANCODE = 0x0008; // not used currently; using VKs
+        private const uint KEYEVENTF_SCANCODE = 0x0008;
+        private const uint MAPVK_VK_TO_VSC = 0x0;
 
-        private const int ActionDelay = 1;
+        private const int ActionDelay = 30;
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
@@ -50,6 +52,9 @@ namespace AimBot.Utilities
             public IntPtr dwExtraInfo;
         }
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
 
         public static void KeyDown(Keys key) { SendKey(key, false); }
 
@@ -73,6 +78,10 @@ namespace AimBot.Utilities
 
         private static void SendKey(Keys key, bool keyUp)
         {
+            // Use scancodes; some games/overlays ignore VK-based input
+            ushort scan = (ushort)MapVirtualKey((uint)key, MAPVK_VK_TO_VSC);
+            uint flags = KEYEVENTF_SCANCODE | (keyUp ? KEYEVENTF_KEYUP : 0);
+
             var input = new INPUT
             {
                 type = INPUT_KEYBOARD,
@@ -80,9 +89,9 @@ namespace AimBot.Utilities
                 {
                     ki = new KEYBDINPUT
                     {
-                        wVk = (ushort)key,
-                        wScan = 0,
-                        dwFlags = keyUp ? KEYEVENTF_KEYUP : 0,
+                        wVk = 0, // use scancode
+                        wScan = scan,
+                        dwFlags = flags,
                         time = 0,
                         dwExtraInfo = IntPtr.Zero
                     }

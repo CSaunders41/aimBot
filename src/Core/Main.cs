@@ -121,25 +121,7 @@ namespace AimBot.Core
             return base.Initialise();
         }
 
-        public override void AreaChange(AreaInstance area)
-        {
-            // Release held key when changing areas
-            if (_holdingAutoClickKey)
-            {
-                try
-                {
-                    Input.KeyUp(Settings.AutoClickKey.Value);
-                    _holdingAutoClickKey = false;
-                    LogMessage($"Released held key on area change: {Settings.AutoClickKey.Value}", 1);
-                }
-                catch (Exception ex)
-                {
-                    LogMessage($"Error releasing held key on area change: {ex.Message}", 1);
-                }
-            }
-            
-            base.AreaChange(area);
-        }
+
 
         public override void Render()
         {
@@ -472,6 +454,21 @@ namespace AimBot.Core
 
         public override void AreaChange(AreaInstance area)
         {
+            // Release held key when changing areas
+            if (_holdingAutoClickKey)
+            {
+                try
+                {
+                    Input.KeyUp(Settings.AutoClickKey.Value);
+                    _holdingAutoClickKey = false;
+                    LogMessage($"Released held key on area change: {Settings.AutoClickKey.Value}", 1);
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error releasing held key on area change: {ex.Message}", 1);
+                }
+            }
+            
             // Update static Player utility references on area change
             AimBot.Utilities.Player.Area = GameController.Game.IngameState.Data.CurrentArea;
             AimBot.Utilities.Player.AreaHash = GameController.Game.IngameState.Data.CurrentAreaHash;

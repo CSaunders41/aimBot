@@ -1281,16 +1281,13 @@ namespace AimBot.Core
                     return;
                 }
                 
-                // Ensure PoE window is foreground to receive input
+                // Log foreground status (do not hard-block; some overlays confuse IsForeground)
                 try
                 {
-                    if (!GameController.Window.IsForeground())
+                    bool isFg = GameController.Window.IsForeground();
+                    if (Settings.DetailedDebugLogging.Value)
                     {
-                        if (Settings.DetailedDebugLogging.Value)
-                        {
-                            LogMessage("Window not in foreground; skipping key press", 1);
-                        }
-                        return;
+                        LogMessage($"Window IsForeground: {isFg}", 1);
                     }
                     Thread.Sleep(5);
                 }
@@ -1321,6 +1318,10 @@ namespace AimBot.Core
                     if (requestControl != null)
                     {
                         hasControl = requestControl("Aim Bot", 300);
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage($"InputCoordinator.RequestControl -> {hasControl}", 1);
+                        }
                     }
                 }
                 catch { }

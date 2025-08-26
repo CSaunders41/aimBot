@@ -1336,7 +1336,8 @@ namespace AimBot.Core
                 bool pressed = false;
                 try
                 {
-                    var miPressAction = GameController?.PluginBridge?.GetMethod<Action<Keys>>("MagicInput.KeyPress");
+                    // Try with System.Windows.Forms.Keys first
+                    var miPressAction = GameController?.PluginBridge?.GetMethod<Action<System.Windows.Forms.Keys>>("MagicInput.KeyPress");
                     if (miPressAction != null)
                     {
                         LogMessage($"About to press key (MagicInput.KeyPress): {key}", 1);
@@ -1344,7 +1345,10 @@ namespace AimBot.Core
                         pressed = true;
                     }
                 }
-                catch {}
+                catch (Exception ex)
+                {
+                    LogMessage($"MagicInput.KeyPress failed: {ex.Message}", 1);
+                }
 
                 if (!pressed)
                 {

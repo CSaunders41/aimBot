@@ -1332,12 +1332,29 @@ namespace AimBot.Core
                     return;
                 }
 
-                // Use ExileCore.Input to press the key (more compatible with PoE)
-                LogMessage($"About to press key (Input): {key}", 1);
-                Input.KeyDown(key);
-                System.Threading.Thread.Sleep(Math.Max(30, Settings.AutoClickKeyHold.Value));
-                Input.KeyUp(key);
-                LogMessage($"Auto-pressed key (Input): {key}", 1);
+                // Prefer MagicInput if available via PluginBridge
+                bool pressed = false;
+                try
+                {
+                    var miPressAction = GameController?.PluginBridge?.GetMethod<Action<Keys>>("MagicInput.KeyPress");
+                    if (miPressAction != null)
+                    {
+                        LogMessage($"About to press key (MagicInput.KeyPress): {key}", 1);
+                        miPressAction(key);
+                        pressed = true;
+                    }
+                }
+                catch {}
+
+                if (!pressed)
+                {
+                    // Use ExileCore.Input to press the key
+                    LogMessage($"About to press key (Input): {key}", 1);
+                    Input.KeyDown(key);
+                    System.Threading.Thread.Sleep(Math.Max(30, Settings.AutoClickKeyHold.Value));
+                    Input.KeyUp(key);
+                    LogMessage($"Auto-pressed key (Input): {key}", 1);
+                }
             }
             catch (Exception e)
             {

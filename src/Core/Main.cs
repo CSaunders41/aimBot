@@ -216,6 +216,16 @@ namespace AimBot.Core
                     {
                         shouldAim = HasTargetsInRange();
                         aimReason = shouldAim ? "Automatic targeting (enemies in range)" : "Automatic targeting (no valid targets)";
+                        
+                        // Enhanced debugging for target detection
+                        if (Settings.DetailedDebugLogging.Value && !shouldAim)
+                        {
+                            int totalEntities = GameController?.Entities?.Count() ?? 0;
+                            int totalMonsters = GameController?.Entities?.Where(x => x?.HasComponent<Monster>() == true).Count() ?? 0;
+                            int aliveMonsters = GameController?.Entities?.Where(x => x?.HasComponent<Monster>() == true && x.IsAlive).Count() ?? 0;
+                            int hostileMonsters = GameController?.Entities?.Where(x => x?.HasComponent<Monster>() == true && x.IsAlive && x.IsHostile).Count() ?? 0;
+                            LogMessage($"Debug: Total entities: {totalEntities}, Monsters: {totalMonsters}, Alive: {aliveMonsters}, Hostile: {hostileMonsters}, Range: {Settings.AimRange.Value}", 1);
+                        }
                     }
                 }
                 else if (!Settings.AutomaticTargeting.Value && !uiOpen)
@@ -224,6 +234,12 @@ namespace AimBot.Core
                     bool keyPressed = Keyboard.IsKeyDown((int) Settings.AimKey.Value);
                     shouldAim = keyPressed;
                     aimReason = keyPressed ? $"Manual key ({Settings.AimKey.Value}) pressed" : "Manual mode (key not pressed)";
+                    
+                    // Enhanced debugging for manual mode
+                    if (Settings.DetailedDebugLogging.Value && !shouldAim)
+                    {
+                        LogMessage($"Debug: Manual mode - Aim key ({Settings.AimKey.Value}) not pressed", 1);
+                    }
                 }
                 else
                 {
@@ -237,6 +253,7 @@ namespace AimBot.Core
                     string mode = Settings.AutomaticTargeting.Value ? "Automatic" : "Manual";
                     string pauseStatus = _automaticTargetingPaused ? " (PAUSED)" : "";
                     LogMessage($"Mode: {mode}{pauseStatus}, UI Open: {uiOpen}, Should Aim: {shouldAim}, Currently Aiming: {_aiming}", 1);
+                    LogMessage($"Reason: {aimReason}", 1);
                 }
                 
                 // Show pause status prominently when paused (even without debug mode)

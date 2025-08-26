@@ -1284,7 +1284,14 @@ namespace AimBot.Core
                 // Ensure PoE window is foreground to receive input
                 try
                 {
-                    GameController.Window.BringToForeground();
+                    if (!GameController.Window.IsForeground())
+                    {
+                        if (Settings.DetailedDebugLogging.Value)
+                        {
+                            LogMessage("Window not in foreground; skipping key press", 1);
+                        }
+                        return;
+                    }
                     Thread.Sleep(5);
                 }
                 catch {}

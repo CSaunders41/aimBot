@@ -54,6 +54,7 @@ namespace AimBot.Core
         // Pause/override functionality
         private bool _automaticTargetingPaused = false;
         private bool _pauseKeyWasPressed = false;
+        private bool _holdingAutoClickKey = false;
         private DateTime _lastTargetTime = DateTime.MinValue;
         
         // Line of sight terrain data
@@ -118,6 +119,26 @@ namespace AimBot.Core
             };
             
             return base.Initialise();
+        }
+
+        public override void AreaChange(AreaInstance area)
+        {
+            // Release held key when changing areas
+            if (_holdingAutoClickKey)
+            {
+                try
+                {
+                    Input.KeyUp(Settings.AutoClickKey.Value);
+                    _holdingAutoClickKey = false;
+                    LogMessage($"Released held key on area change: {Settings.AutoClickKey.Value}", 1);
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error releasing held key on area change: {ex.Message}", 1);
+                }
+            }
+            
+            base.AreaChange(area);
         }
 
         public override void Render()
@@ -249,7 +270,7 @@ namespace AimBot.Core
                     LogMessage($"{mode} targeting activated! AimPlayers: {Settings.AimPlayers.Value}", 1);
 
                     // If configured, hold the auto-click key while aiming
-                    if (Settings.HoldAutoClickWhileAiming.Value)
+                    if (Settings.HoldAutoClickWhileAiming.Value && !_holdingAutoClickKey)
                     {
                         try
                         {
@@ -257,9 +278,14 @@ namespace AimBot.Core
                             if (requestControl == null || requestControl("Aim Bot", 300))
                             {
                                 Input.KeyDown(Settings.AutoClickKey.Value);
+                                _holdingAutoClickKey = true;
+                                LogMessage($"Started holding key: {Settings.AutoClickKey.Value}", 1);
                             }
                         }
-                        catch {}
+                        catch (Exception ex)
+                        {
+                            LogMessage($"Error starting key hold: {ex.Message}", 1);
+                        }
                     }
 
                     Aimbot();
@@ -275,13 +301,18 @@ namespace AimBot.Core
                         _aiming = false;
 
                         // If we were holding the key, release it now
-                        if (Settings.HoldAutoClickWhileAiming.Value)
+                        if (Settings.HoldAutoClickWhileAiming.Value && _holdingAutoClickKey)
                         {
                             try
                             {
                                 Input.KeyUp(Settings.AutoClickKey.Value);
+                                _holdingAutoClickKey = false;
+                                LogMessage($"Released held key: {Settings.AutoClickKey.Value}", 1);
                             }
-                            catch {}
+                            catch (Exception ex)
+                            {
+                                LogMessage($"Error releasing held key: {ex.Message}", 1);
+                            }
                         }
                     }
                     
@@ -1122,6 +1153,28 @@ namespace AimBot.Core
                     {
                         LogMessage("No valid targets after sorting", 1);
                     }
+                    
+                    // No targets found - stop aiming and release held key
+                    if (_aiming)
+                    {
+                        LogMessage("Stopping aim: No valid targets", 1);
+                        _aiming = false;
+                        
+                        // Release held key if we were holding it
+                        if (Settings.HoldAutoClickWhileAiming.Value && _holdingAutoClickKey)
+                        {
+                            try
+                            {
+                                Input.KeyUp(Settings.AutoClickKey.Value);
+                                _holdingAutoClickKey = false;
+                                LogMessage($"Released held key: {Settings.AutoClickKey.Value}", 1);
+                            }
+                            catch (Exception ex)
+                            {
+                                LogMessage($"Error releasing held key: {ex.Message}", 1);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception e)
@@ -1132,6 +1185,21 @@ namespace AimBot.Core
                     LogError($"MonsterAim stack trace: {e.StackTrace}", 5);
                 }
                 _aiming = false; // Reset aiming state on error
+                
+                // Release held key on error
+                if (_holdingAutoClickKey)
+                {
+                    try
+                    {
+                        Input.KeyUp(Settings.AutoClickKey.Value);
+                        _holdingAutoClickKey = false;
+                        LogMessage($"Released held key due to error: {Settings.AutoClickKey.Value}", 1);
+                    }
+                    catch (Exception keyEx)
+                    {
+                        LogMessage($"Error releasing held key on error: {keyEx.Message}", 1);
+                    }
+                }
             }
         }
 
@@ -1791,3 +1859,4 @@ namespace AimBot.Core
         }
     }
 }
+

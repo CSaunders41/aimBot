@@ -327,7 +327,7 @@ namespace AimBot.Core
                         }
                         _aiming = false;
 
-                        // If we were holding the key, release it now
+                        // Release held key if we were holding it
                         if (Settings.HoldAutoClickWhileAiming.Value && _holdingAutoClickKey)
                         {
                             try
@@ -1151,7 +1151,7 @@ namespace AimBot.Core
                             {
                                 LogMessage("Target off screen vertically", 1);
                             }
-                            _aiming = false;
+                            StopAimingAndReleaseKey("Target off screen vertically");
                             return;
                         }
 
@@ -1161,7 +1161,7 @@ namespace AimBot.Core
                             {
                                 LogMessage("Target off screen horizontally", 1);
                             }
-                            _aiming = false;
+                            StopAimingAndReleaseKey("Target off screen horizontally");
                             return;
                         }
 
@@ -1199,23 +1199,7 @@ namespace AimBot.Core
                     // No targets found - stop aiming and release held key
                     if (_aiming)
                     {
-                        LogMessage("Stopping aim: No valid targets", 1);
-                        _aiming = false;
-                        
-                        // Release held key if we were holding it
-                        if (Settings.HoldAutoClickWhileAiming.Value && _holdingAutoClickKey)
-                        {
-                            try
-                            {
-                                Input.KeyUp(Settings.AutoClickKey.Value);
-                                _holdingAutoClickKey = false;
-                                LogMessage($"Released held key: {Settings.AutoClickKey.Value}", 1);
-                            }
-                            catch (Exception ex)
-                            {
-                                LogMessage($"Error releasing held key: {ex.Message}", 1);
-                            }
-                        }
+                        StopAimingAndReleaseKey("No valid targets");
                     }
                 }
             }
@@ -1241,6 +1225,27 @@ namespace AimBot.Core
                     {
                         LogMessage($"Error releasing held key on error: {keyEx.Message}", 1);
                     }
+                }
+            }
+        }
+
+        private void StopAimingAndReleaseKey(string reason)
+        {
+            LogMessage($"Stopping aim: {reason}", 1);
+            _aiming = false;
+            
+            // Release held key if we were holding it
+            if (Settings.HoldAutoClickWhileAiming.Value && _holdingAutoClickKey)
+            {
+                try
+                {
+                    Input.KeyUp(Settings.AutoClickKey.Value);
+                    _holdingAutoClickKey = false;
+                    LogMessage($"Released held key: {Settings.AutoClickKey.Value}", 1);
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error releasing held key: {ex.Message}", 1);
                 }
             }
         }

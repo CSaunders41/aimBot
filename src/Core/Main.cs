@@ -764,7 +764,7 @@ namespace AimBot.Core
                     MonsterAim();
                     
                 _aimTimer.Restart();
-                _aiming = false;
+                // Don't automatically set _aiming = false here - let the main logic control it
             }
             catch (Exception e)
             {
@@ -773,7 +773,8 @@ namespace AimBot.Core
                 {
                     LogError($"Aimbot stack trace: {e.StackTrace}", 5);
                 }
-                _aiming = false; // Reset aiming state on error
+                // Don't reset _aiming here - let StopAimingAndReleaseKey handle it properly
+                StopAimingAndReleaseKey("Aimbot error");
             }
         }
 
@@ -984,7 +985,10 @@ namespace AimBot.Core
 
                 if (Settings.DetailedDebugLogging.Value)
                 {
-                    LogMessage($"MonsterAim: Found {validEntities.Count} valid entities before distance check", 1);
+                    int totalEntities = GameController.Entities.Count();
+                    int monsterEntities = GameController.Entities.Where(x => x?.HasComponent<Monster>() == true).Count();
+                    int aliveMonsters = GameController.Entities.Where(x => x?.HasComponent<Monster>() == true && x.IsAlive).Count();
+                    LogMessage($"MonsterAim: Total={totalEntities}, Monsters={monsterEntities}, Alive={aliveMonsters}, Valid={validEntities.Count}", 1);
                 }
 
                 // Filter by distance using GameController.Player.Pos directly

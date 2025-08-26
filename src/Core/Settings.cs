@@ -41,6 +41,7 @@ namespace AimBot.Core
         [Menu("Show Aim Range")] public ToggleNode ShowAimRange { get; set; } = new ToggleNode(false);
         [Menu("Detailed Debug Logging")] public ToggleNode DetailedDebugLogging { get; set; } = new ToggleNode(false);
         [Menu("Log Monsters to File")] public ToggleNode LogMonstersToFile { get; set; } = new ToggleNode(false);
+        [Menu("Reset Plugin State (Click to Reset)")] public ButtonNode ResetPluginState { get; set; } = new ButtonNode();
         
         //=== LINE OF SIGHT SETTINGS ===
         [Menu("Enable Line of Sight Checking")] public ToggleNode EnableLineOfSight { get; set; } = new ToggleNode(true);

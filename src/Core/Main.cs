@@ -118,6 +118,34 @@ namespace AimBot.Core
                 try { Input.RegisterKey(Settings.AutoClickKey.Value); } catch {}
             };
             
+            // Reset button handler
+            Settings.ResetPluginState.OnPressed += () =>
+            {
+                LogMessage("Manual plugin state reset triggered", 1);
+                try
+                {
+                    // Release any held key
+                    if (_holdingAutoClickKey)
+                    {
+                        Input.KeyUp(Settings.AutoClickKey.Value);
+                        LogMessage($"Reset: Released held key {Settings.AutoClickKey.Value}", 1);
+                    }
+                    
+                    // Reset all state variables
+                    _holdingAutoClickKey = false;
+                    _aiming = false;
+                    _automaticTargetingPaused = false;
+                    _pauseKeyWasPressed = false;
+                    _mouseWasHeldDown = false;
+                    
+                    LogMessage("Plugin state reset completed", 1);
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error during plugin state reset: {ex.Message}", 1);
+                }
+            };
+            
             return base.Initialise();
         }
 
@@ -1368,7 +1396,23 @@ namespace AimBot.Core
                 // If we're already holding the key due to setting, skip discrete press
                 if (Settings.HoldAutoClickWhileAiming.Value)
                 {
-                    LogMessage("Hold-while-aiming enabled; skipping discrete press", 1);
+                    LogMessage($"Hold-while-aiming enabled; skipping discrete press (holding: {_holdingAutoClickKey}, aiming: {_aiming})", 1);
+                    
+                    // Safety check: if we're not actually aiming but think we're holding, reset state
+                    if (_holdingAutoClickKey && !_aiming)
+                    {
+                        LogMessage("WARNING: Key held but not aiming - resetting state", 1);
+                        try
+                        {
+                            Input.KeyUp(Settings.AutoClickKey.Value);
+                            _holdingAutoClickKey = false;
+                            LogMessage($"Reset: Released stuck held key: {Settings.AutoClickKey.Value}", 1);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogMessage($"Error resetting stuck key: {ex.Message}", 1);
+                        }
+                    }
                     return;
                 }
                 
